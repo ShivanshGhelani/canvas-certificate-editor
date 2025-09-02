@@ -1,0 +1,1079 @@
+import React, { useEffect } from 'react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+
+const Canvas = () => {
+  useEffect(() => {
+    // Prevent multiple loading
+    if (window.scriptsLoaded) return;
+    window.scriptsLoaded = true;
+
+    // Make libraries available globally for existing JS modules
+    window.html2canvas = html2canvas;
+    window.jsPDF = jsPDF;
+    
+    // Initialize global variables to prevent conflicts
+    window.elementCounter = 0;
+    window.selectedElement = null;
+
+    // Initialize the editor functionality directly
+    initializeEditor();
+
+    // Define the canvas click handler function
+    const handleCanvasClick = (e) => {
+      // Only deselect if clicking on the canvas wrapper itself, not its contents
+      if (e.target === certificateWrapper || e.target.id === 'background-canvas') {
+        if (window.ElementSelection) {
+          window.ElementSelection.deselect();
+        }
+      }
+    };
+
+    // Add canvas click handler for deselection
+    const certificateWrapper = document.getElementById('certificate-wrapper');
+    if (certificateWrapper) {
+      certificateWrapper.addEventListener('click', handleCanvasClick);
+    }
+
+    // Cleanup function
+    return () => {
+      window.scriptsLoaded = false;
+      if (certificateWrapper) {
+        certificateWrapper.removeEventListener('click', handleCanvasClick);
+      }
+    };
+  }, []);
+
+  // Editor functionality moved directly into React component
+  const initializeEditor = () => {
+    // Setup add text button
+    const addTextBtn = document.getElementById('add-text-btn');
+    if (addTextBtn && !addTextBtn.hasAttribute('data-initialized')) {
+      addTextBtn.setAttribute('data-initialized', 'true');
+      addTextBtn.addEventListener('click', handleAddText);
+    }
+
+    // Setup add logo button with protection against duplicate listeners
+    const addLogoBtn = document.getElementById('add-logo-btn');
+    const logoInput = document.getElementById('upload-logo-dynamic');
+    
+    if (addLogoBtn && logoInput && !addLogoBtn.hasAttribute('data-initialized')) {
+      addLogoBtn.setAttribute('data-initialized', 'true');
+      logoInput.setAttribute('data-initialized', 'true');
+      
+      addLogoBtn.addEventListener('click', () => {
+        logoInput.click();
+      });
+      
+      logoInput.addEventListener('change', handleLogoUpload);
+    }
+
+    // Setup download button
+    const downloadBtn = document.getElementById('download-pdf');
+    if (downloadBtn && !downloadBtn.hasAttribute('data-initialized')) {
+      downloadBtn.setAttribute('data-initialized', 'true');
+      downloadBtn.addEventListener('click', handleDownloadPDF);
+    }
+
+    // Clear selection when clicking empty area (use global variable to track)
+    if (!window.documentClickInitialized) {
+      window.documentClickInitialized = true;
+      document.addEventListener('click', handleDocumentClick);
+    }
+  };
+
+  const handleAddText = () => {
+    const element = createSimpleTextElement('Editable Text');
+    const container = document.getElementById('dynamic-elements-container');
+    
+    // Position in center with proper pixel values
+    const containerRect = container.getBoundingClientRect();
+    const centerX = containerRect.width / 2 - 100; // Approximate text width
+    const centerY = containerRect.height / 2 - 15; // Approximate text height
+    
+    element.style.left = centerX + 'px';
+    element.style.top = centerY + 'px';
+    element.style.transform = 'none'; // Remove transform for proper positioning
+    
+    container.appendChild(element);
+    selectElement(element);
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const element = createSimpleLogoElement(e.target.result);
+        const container = document.getElementById('dynamic-elements-container');
+        
+        // Position in center with proper pixel values
+        const containerRect = container.getBoundingClientRect();
+        const centerX = containerRect.width / 2 - 50; // Half of default logo width
+        const centerY = containerRect.height / 2 - 50; // Half of default logo height
+        
+        element.style.left = centerX + 'px';
+        element.style.top = centerY + 'px';
+        element.style.transform = 'none'; // Remove transform for proper positioning
+        
+        container.appendChild(element);
+        selectElement(element);
+        
+        // Clear the file input to prevent issues
+        e.target.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    // Hide selection indicators before generating PDF
+    if (window.selectedElement) {
+      window.selectedElement.classList.remove('selected');
+      window.selectedElement = null;
+      const propertiesPanel = document.getElementById('properties-panel');
+      if (propertiesPanel) propertiesPanel.style.display = 'none';
+    }
+    
+    // Wait for UI updates to render
+    await new Promise(r => setTimeout(r, 100));
+
+    const certificateWrapper = document.getElementById('certificate-wrapper');
+    
+    try {
+      const canvas = await html2canvas(certificateWrapper, { 
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+      
+      // Create PDF document (A4 landscape)
+      const doc = new jsPDF({ 
+        orientation: 'landscape', 
+        unit: 'mm', 
+        format: [297, 210] 
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      doc.addImage(imgData, 'PNG', 0, 0, 297, 210);
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const filename = `Certificate-${timestamp}.pdf`;
+      
+      // Save the PDF
+      doc.save(filename);
+      
+      console.log('PDF generated successfully:', filename);
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
+  };
+
+  const handleDocumentClick = (e) => {
+    if (!e.target.closest('.dynamic-element') && 
+        !e.target.closest('.delete-btn') && 
+        !e.target.closest('.resize-handle')) {
+      
+      document.querySelectorAll('.dynamic-element').forEach(el => {
+        el.style.border = '2px solid transparent';
+        el.classList.remove('selected');
+        // Hide resize handles
+        el.querySelectorAll('.resize-handle').forEach(handle => {
+          handle.style.display = 'none';
+        });
+        // Blur text elements to exit edit mode
+        if (el.dataset.type === 'text') {
+          el.blur();
+        }
+      });
+      
+      // Remove delete buttons
+      document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+      window.selectedElement = null;
+    }
+  };
+
+  // Element creation functions
+  const createSimpleTextElement = (text = 'Editable Text') => {
+    window.elementCounter = (window.elementCounter || 0) + 1;
+    const element = document.createElement('div');
+    element.className = 'dynamic-element';
+    element.dataset.type = 'text';
+    element.contentEditable = 'true';
+    element.textContent = text;
+    
+    // Simple styling with fixed dimensions for resizing
+    element.style.cssText = `
+      position: absolute;
+      font-family: 'Roboto', sans-serif;
+      font-size: 24px;
+      color: #34495e;
+      background: transparent;
+      border: 2px dashed transparent;
+      outline: none;
+      cursor: move;
+      padding: 8px;
+      z-index: 10;
+      user-select: text;
+      width: 200px;
+      min-height: 40px;
+      border-radius: 4px;
+      box-sizing: border-box;
+      overflow: hidden;
+      word-wrap: break-word;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+    
+    // Add selection on click
+    element.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectElement(element);
+    });
+    
+    // Handle focus/blur for editing vs dragging
+    element.addEventListener('focus', () => {
+      element.style.cursor = 'text';
+    });
+    
+    element.addEventListener('blur', () => {
+      element.style.cursor = 'move';
+      // Force recreate and show resize handles after editing
+      if (element.classList.contains('selected')) {
+        setTimeout(() => {
+          // Remove old handles first
+          element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+          // Recreate handles using stored function
+          if (element.addResizeHandles) {
+            element.addResizeHandles();
+          }
+          // Force show them
+          element.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.style.display = 'block';
+          });
+        }, 100);
+      }
+    });
+    
+    // Keep element selected and handles visible after editing
+    element.addEventListener('input', () => {
+      if (element.classList.contains('selected')) {
+        setTimeout(() => {
+          // Check if handles exist, if not recreate them
+          if (element.querySelectorAll('.resize-handle').length === 0) {
+            if (element.addResizeHandles) {
+              element.addResizeHandles();
+            }
+          }
+          // Force show them
+          element.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.style.display = 'block';
+          });
+        }, 50);
+      }
+    });
+    
+    // Force handles to stay visible while typing
+    element.addEventListener('keydown', (e) => {
+      e.stopPropagation();
+      // Force recreate handles after any key press if selected
+      if (element.classList.contains('selected')) {
+        setTimeout(() => {
+          if (element.querySelectorAll('.resize-handle').length === 0) {
+            if (element.addResizeHandles) {
+              element.addResizeHandles();
+            }
+          }
+          element.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.style.display = 'block';
+          });
+        }, 10);
+      }
+    });
+    
+    element.addEventListener('keyup', (e) => {
+      // Force recreate handles after typing stops
+      if (element.classList.contains('selected')) {
+        setTimeout(() => {
+          element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+          if (element.addResizeHandles) {
+            element.addResizeHandles();
+          }
+          element.querySelectorAll('.resize-handle').forEach(handle => {
+            handle.style.display = 'block';
+          });
+        }, 50);
+      }
+    });
+    
+    // Make draggable and resizable
+    makeElementDraggable(element);
+    
+    return element;
+  };
+
+  const createSimpleLogoElement = (imageSrc) => {
+    window.elementCounter = (window.elementCounter || 0) + 1;
+    
+    // Create a wrapper div to hold the image and resize handles
+    const wrapper = document.createElement('div');
+    wrapper.className = 'dynamic-element';
+    wrapper.dataset.type = 'logo';
+    
+    // Create the actual image element
+    const element = document.createElement('img');
+    element.src = imageSrc;
+    element.style.cssText = `
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    `;
+    
+    // Style the wrapper
+    wrapper.style.cssText = `
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      cursor: move;
+      border: 2px solid transparent;
+      z-index: 10;
+      user-select: none;
+    `;
+    
+    // Add the image to the wrapper
+    wrapper.appendChild(element);
+    
+    // Add selection on click
+    wrapper.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectElement(wrapper);
+    });
+    
+    // Add double-click to replace image with proper event handling
+    wrapper.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Create temporary file input
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      
+      fileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            element.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+        // Clean up
+        document.body.removeChild(fileInput);
+      });
+      
+      // Add to DOM and trigger click
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    });
+    
+    // Make draggable and resizable
+    makeElementDraggable(wrapper);
+    
+    return wrapper;
+  };
+
+  const selectElement = (element) => {
+    // Clear previous selections
+    document.querySelectorAll('.dynamic-element').forEach(el => {
+      el.style.border = '2px solid transparent';
+      el.classList.remove('selected');
+      // Hide all resize handles
+      el.querySelectorAll('.resize-handle').forEach(handle => handle.style.display = 'none');
+    });
+    
+    // Select current element
+    element.style.border = '2px solid #3b82f6';
+    element.classList.add('selected');
+    window.selectedElement = element;
+    
+    // Dispatch custom event for sidebar properties panel
+    const event = new CustomEvent('elementSelected', { 
+      detail: element
+    });
+    window.dispatchEvent(event);
+    
+    // Force recreate and show resize handles for selected element
+    setTimeout(() => {
+      // Remove existing handles first
+      element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+      
+      // Recreate all handles using stored function
+      if (element.addResizeHandles) {
+        element.addResizeHandles();
+      } else {
+        console.log('No addResizeHandles function found on element:', element.dataset.type);
+      }
+      
+      // Force show all handles
+      element.querySelectorAll('.resize-handle').forEach(handle => {
+        handle.style.display = 'block';
+        handle.style.visibility = 'visible';
+        handle.style.opacity = '1';
+      });
+    }, 50);
+    
+    // Show delete button
+    showDeleteButton(element);
+  };
+
+  const showDeleteButton = (element) => {
+    // Remove existing delete button
+    const existingBtn = document.querySelector('.delete-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    // Create delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.innerHTML = '×';
+    deleteBtn.style.cssText = `
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #dc3545;
+      color: white;
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      z-index: 1003;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+    `;
+    
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      element.remove();
+      deleteBtn.remove();
+      window.selectedElement = null;
+    });
+    
+    deleteBtn.addEventListener('mouseenter', () => {
+      deleteBtn.style.background = '#c82333';
+      deleteBtn.style.transform = 'scale(1.1)';
+    });
+    
+    deleteBtn.addEventListener('mouseleave', () => {
+      deleteBtn.style.background = '#dc3545';
+      deleteBtn.style.transform = 'scale(1)';
+    });
+    
+    element.appendChild(deleteBtn);
+  };
+
+  const makeElementDraggable = (element) => {
+    let isDragging = false;
+    let isResizing = false;
+    let resizeType = '';
+    let startX, startY, startLeft, startTop, startWidth, startHeight;
+    
+    // Add Canva-style resize handles for all elements
+    const addResizeHandles = () => {
+      // Remove existing handles
+      element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+      
+      // Define all resize handles (corners and sides)
+      const handles = [
+        { class: 'resize-nw', cursor: 'nw-resize', position: 'top: -5px; left: -5px;' },
+        { class: 'resize-n', cursor: 'n-resize', position: 'top: -5px; left: 50%; transform: translateX(-50%);' },
+        { class: 'resize-ne', cursor: 'ne-resize', position: 'top: -5px; right: -5px;' },
+        { class: 'resize-e', cursor: 'e-resize', position: 'top: 50%; right: -5px; transform: translateY(-50%);' },
+        { class: 'resize-se', cursor: 'se-resize', position: 'bottom: -5px; right: -5px;' },
+        { class: 'resize-s', cursor: 's-resize', position: 'bottom: -5px; left: 50%; transform: translateX(-50%);' },
+        { class: 'resize-sw', cursor: 'sw-resize', position: 'bottom: -5px; left: -5px;' },
+        { class: 'resize-w', cursor: 'w-resize', position: 'top: 50%; left: -5px; transform: translateY(-50%);' }
+      ];
+      
+      handles.forEach(handleInfo => {
+        const handle = document.createElement('div');
+        handle.className = `resize-handle ${handleInfo.class}`;
+        handle.style.cssText = `
+          position: absolute;
+          width: 10px;
+          height: 10px;
+          background: #007bff;
+          border: 2px solid white;
+          border-radius: 2px;
+          cursor: ${handleInfo.cursor};
+          z-index: 1002;
+          display: none;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+          pointer-events: auto;
+          ${handleInfo.position}
+        `;
+        
+        // Add resize functionality to each handle
+        handle.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          
+          isResizing = true;
+          resizeType = handleInfo.class.replace('resize-', '');
+          startX = e.clientX;
+          startY = e.clientY;
+          
+          const rect = element.getBoundingClientRect();
+          const container = document.getElementById('dynamic-elements-container');
+          const containerRect = container.getBoundingClientRect();
+          
+          startLeft = rect.left - containerRect.left;
+          startTop = rect.top - containerRect.top;
+          startWidth = rect.width;
+          startHeight = rect.height;
+          
+          document.addEventListener('mousemove', handleResize);
+          document.addEventListener('mouseup', stopResize);
+        });
+        
+        element.appendChild(handle);
+      });
+    };
+    
+    const handleResize = (e) => {
+      if (!isResizing) return;
+      
+      const deltaX = e.clientX - startX;
+      const deltaY = e.clientY - startY;
+      
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+      let newLeft = startLeft;
+      let newTop = startTop;
+      
+      // Calculate new dimensions based on resize direction
+      switch (resizeType) {
+        case 'se': // Southeast (bottom-right)
+          newWidth = startWidth + deltaX;
+          newHeight = startHeight + deltaY;
+          break;
+        case 'sw': // Southwest (bottom-left)
+          newWidth = startWidth - deltaX;
+          newHeight = startHeight + deltaY;
+          newLeft = startLeft + deltaX;
+          break;
+        case 'ne': // Northeast (top-right)
+          newWidth = startWidth + deltaX;
+          newHeight = startHeight - deltaY;
+          newTop = startTop + deltaY;
+          break;
+        case 'nw': // Northwest (top-left)
+          newWidth = startWidth - deltaX;
+          newHeight = startHeight - deltaY;
+          newLeft = startLeft + deltaX;
+          newTop = startTop + deltaY;
+          break;
+        case 'n': // North (top)
+          newHeight = startHeight - deltaY;
+          newTop = startTop + deltaY;
+          break;
+        case 's': // South (bottom)
+          newHeight = startHeight + deltaY;
+          break;
+        case 'e': // East (right)
+          newWidth = startWidth + deltaX;
+          break;
+        case 'w': // West (left)
+          newWidth = startWidth - deltaX;
+          newLeft = startLeft + deltaX;
+          break;
+      }
+      
+      // Apply minimum size constraints
+      const minSize = 20;
+      if (newWidth < minSize) {
+        newWidth = minSize;
+        if (resizeType.includes('w')) newLeft = startLeft + startWidth - minSize;
+      }
+      if (newHeight < minSize) {
+        newHeight = minSize;
+        if (resizeType.includes('n')) newTop = startTop + startHeight - minSize;
+      }
+      
+      // Apply the new dimensions and position
+      element.style.width = newWidth + 'px';
+      element.style.height = newHeight + 'px';
+      element.style.left = newLeft + 'px';
+      element.style.top = newTop + 'px';
+    };
+    
+    const stopResize = () => {
+      isResizing = false;
+      resizeType = '';
+      document.removeEventListener('mousemove', handleResize);
+      document.removeEventListener('mouseup', stopResize);
+    };
+    
+    // Add resize handles to the element
+    addResizeHandles();
+    
+    // Store the function on the element for later use
+    element.addResizeHandles = addResizeHandles;
+    
+    // Force show resize handles when element is selected
+    const forceShowHandles = () => {
+      if (element.classList.contains('selected')) {
+        element.querySelectorAll('.resize-handle').forEach(handle => {
+          handle.style.display = 'block';
+        });
+      }
+    };
+    
+    // Show/hide resize handles when element is selected/deselected
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          const handles = element.querySelectorAll('.resize-handle');
+          if (element.classList.contains('selected')) {
+            // If no handles exist, recreate them
+            if (handles.length === 0) {
+              addResizeHandles();
+            }
+            // Force show all handles
+            element.querySelectorAll('.resize-handle').forEach(handle => {
+              handle.style.display = 'block';
+            });
+          } else {
+            handles.forEach(handle => handle.style.display = 'none');
+          }
+        }
+      });
+    });
+    observer.observe(element, { attributes: true, childList: true, subtree: true });
+    
+    // Drag functionality
+    element.addEventListener('mousedown', (e) => {
+      // Don't drag if clicking on resize handles or delete button
+      if (e.target.classList.contains('resize-handle') || 
+          e.target.classList.contains('delete-btn')) {
+        return;
+      }
+      
+      // For text elements, only allow dragging when not in edit mode or when holding Ctrl
+      if (element.dataset.type === 'text') {
+        // If the element is focused and we're not holding Ctrl, don't drag
+        if (document.activeElement === element && !e.ctrlKey) {
+          return;
+        }
+        // Blur the element to exit edit mode when starting drag
+        element.blur();
+      }
+      
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      
+      // Get current position
+      const computedStyle = getComputedStyle(element);
+      startLeft = parseInt(computedStyle.left) || 0;
+      startTop = parseInt(computedStyle.top) || 0;
+      
+      // Remove transform if it exists for proper positioning
+      element.style.transform = 'none';
+      element.style.left = startLeft + 'px';
+      element.style.top = startTop + 'px';
+      
+      element.style.cursor = 'grabbing';
+      
+      const handleDragMove = (e) => {
+        if (!isDragging) return;
+        
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+        
+        const newLeft = startLeft + deltaX;
+        const newTop = startTop + deltaY;
+        
+        // Constrain to certificate boundaries
+        const container = document.getElementById('certificate-wrapper');
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        
+        const maxLeft = containerRect.width - elementRect.width;
+        const maxTop = containerRect.height - elementRect.height;
+        
+        element.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
+        element.style.top = Math.max(0, Math.min(maxTop, newTop)) + 'px';
+      };
+      
+      const handleDragUp = () => {
+        isDragging = false;
+        element.style.cursor = element.dataset.type === 'text' ? 'text' : 'move';
+        document.removeEventListener('mousemove', handleDragMove);
+        document.removeEventListener('mouseup', handleDragUp);
+      };
+      
+      document.addEventListener('mousemove', handleDragMove);
+      document.addEventListener('mouseup', handleDragUp);
+      
+      e.preventDefault();
+      e.stopPropagation();
+    });
+    
+    // Double-click to edit text
+    if (element.dataset.type === 'text') {
+      element.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        element.focus();
+        // Select all text
+        const range = document.createRange();
+        range.selectNodeContents(element);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        
+        // Force ensure resize handles remain visible during editing
+        setTimeout(() => {
+          if (element.classList.contains('selected')) {
+            if (element.querySelectorAll('.resize-handle').length === 0) {
+              if (element.addResizeHandles) {
+                element.addResizeHandles();
+              }
+            }
+            element.querySelectorAll('.resize-handle').forEach(handle => {
+              handle.style.display = 'block';
+            });
+          }
+        }, 100);
+      });
+    }
+  };
+
+  return (
+    <>
+      {/* Add Google Fonts */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
+      <link href="https://fonts.googleapis.com/css2?family=Allura&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Dancing+Script:wght@400;700&family=Great+Vibes&family=Lato:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lobster&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;700&family=Open+Sans:wght@400;600&family=Oswald:wght@400;600&family=Parisienne&family=Playfair+Display:ital,wght@0,400;0,700;1,700&family=Poppins:wght@400;600&family=Raleway:wght@400;700&family=Roboto:wght@300;400;700&family=Sacramento&family=Tangerine:wght@400;700&family=Uncial+Antiqua&display=swap" rel="stylesheet" />
+      
+      <style>
+        {`
+        /* --- CSS STYLES FOR THE MODERN CORPORATE DESIGN --- */
+        
+        :root {
+            --modern-blue: #2a6df4;
+            --modern-dark: #2c3e50;
+            --modern-bg: #ffffff;
+            --modern-text: #34495e;
+        }
+
+        /* Removed body styles to prevent conflicts with Tailwind CSS */
+
+        /* --- ESSENTIAL STRUCTURE --- */
+        .certificate-wrapper {
+            position: relative;
+            width: 297mm;
+            height: 210mm;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            background-color: var(--modern-bg);
+            overflow: hidden;
+        }
+
+        #background-canvas {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        .certificate-container {
+            position: relative;
+            z-index: 2;
+            width: 100%; height: 100%;
+        }
+       
+        #dynamic-elements-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .certificate-content {
+            text-align: center;
+            color: var(--modern-text);
+            width: 100%; height: 100%;
+            padding: 40px;
+            position: relative; 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            box-sizing: border-box;
+            z-index: 5;
+        }
+
+        /* --- DYNAMIC ELEMENT STYLES --- */
+        .dynamic-element {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid transparent;
+            cursor: move; 
+            pointer-events: all;
+            min-width: 20px;
+            min-height: 20px;
+            transition: border-color 0.2s ease;
+        }
+        .dynamic-element.selected {
+            border: 2px solid #007bff !important;
+            z-index: 100;
+        }
+        .dynamic-element:hover:not(.selected) {
+            border: 2px dashed rgba(0, 123, 255, 0.5);
+        }
+        .dynamic-element img {
+            width: 100%; 
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        .dynamic-element[data-type="logo"] img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        .dynamic-element[data-type="text"] {
+            cursor: text;
+            border: 2px dashed transparent;
+            min-width: 50px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .dynamic-element[data-type="text"]:hover:not(.selected) {
+            background-color: rgba(0, 123, 255, 0.05);
+            border: 2px dashed rgba(0, 123, 255, 0.3);
+        }
+        .dynamic-element[data-type="text"].selected {
+            background-color: rgba(0, 123, 255, 0.1);
+        }
+        
+        /* Logo hover effects */
+        .dynamic-element[data-type="logo"]:hover:not(.selected) {
+            border: 2px dashed rgba(0, 123, 255, 0.5);
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        }
+        .dynamic-element[data-type="logo"]:hover::after {
+            content: "Double-click to change image";
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1004;
+            pointer-events: none;
+        }
+        
+        /* Resize handle styles - Canva-style */
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #007bff;
+            border: 2px solid white;
+            border-radius: 2px;
+            z-index: 1002;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .resize-handle:hover {
+            background: #0056b3;
+            transform: scale(1.3);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+        }
+        
+        /* Specific resize handle positioning */
+        .resize-nw { cursor: nw-resize; }
+        .resize-n { cursor: n-resize; }
+        .resize-ne { cursor: ne-resize; }
+        .resize-e { cursor: e-resize; }
+        .resize-se { cursor: se-resize; }
+        .resize-s { cursor: s-resize; }
+        .resize-sw { cursor: sw-resize; }
+        .resize-w { cursor: w-resize; }
+        
+        /* Side handles should be rectangular */
+        .resize-n, .resize-s {
+            width: 20px;
+            height: 6px;
+            border-radius: 3px;
+        }
+        .resize-e, .resize-w {
+            width: 6px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        /* Better visual feedback for text elements */
+        .dynamic-element[data-type="text"]:hover .resize-handle {
+            background: #28a745;
+        }
+        .dynamic-element[data-type="logo"]:hover .resize-handle {
+            background: #007bff;
+        }
+        
+        /* Delete button styles */
+        .delete-btn {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #dc3545;
+            color: white;
+            border: 2px solid white;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            z-index: 1003;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .delete-btn:hover {
+            background: #c82333 !important;
+            transform: scale(1.1) !important;
+        }
+
+        /* --- CONTROLS --- */
+        /* Controls moved to sidebar - keeping minimal styles for hidden elements */
+        
+        /* --- STATIC CONTENT STYLES --- */
+        .footer-content {
+            display: flex;
+            justify-content: space-between; 
+            align-items: flex-end;
+            width: 100%;
+            margin-top: auto;
+        }
+
+        .signature-block {
+            padding-top: 10px;
+            width: 250px; 
+        }
+
+        .signature-line {
+             border-top: 1px solid #999;
+             height: 50px;
+             margin-bottom: 8px;
+             cursor: pointer;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+        }
+        .signature-line.has-image { border-top: 1px solid transparent; }
+        .signature-line img { max-height: 100%; max-width: 100%; }
+
+        .signature-block .name, .signature-block .title {
+            font-weight: 600;
+            letter-spacing: 1px;
+            color: var(--modern-dark);
+            padding: 2px;
+        }
+        .signature-block .title { font-size: 0.9rem; font-weight: 300; }
+        [contenteditable="true"]:focus {
+            outline: none;
+        }
+
+        /* --- FLOATING PROPERTIES PANEL --- */
+        /* Properties panel moved to sidebar - removing old styles */
+
+        /* Element Selection Styles */
+        .dynamic-element.selected {
+            outline: 2px solid #007bff !important;
+            outline-offset: 2px;
+        }
+
+        .dynamic-element:hover:not(.selected) {
+            outline: 1px dashed rgba(0, 123, 255, 0.5) !important;
+        }
+
+        /* Simple delete button styles */
+        .delete-btn:hover {
+            background: #c82333 !important;
+            transform: scale(1.1);
+        }
+        `}
+      </style>
+
+      {/* Parent container with converted body styles using Tailwind */}
+      <div className="bg-transparent flex flex-col items-center justify-center min-h-auto m-0 p-0 font-sans" style={{fontFamily: "'Roboto', sans-serif"}}>
+        <div className="certificate-wrapper" id="certificate-wrapper">
+        <canvas id="background-canvas" width="1123" height="794"></canvas>
+        
+        <div className="certificate-container" id="certificate-foreground">
+          <div id="dynamic-elements-container">
+            {/* Draggable elements will be added here by JavaScript */}
+          </div>
+
+          <div className="certificate-content">
+            <footer className="footer-content">
+              <div className="signature-block">
+                <label htmlFor="upload-sig-1" className="signature-line" id="sig-line-1"></label>
+                <p className="name" contentEditable="true" suppressContentEditableWarning={true}>{'{{ Organizer\'s Name }}'}</p>
+                <p className="title" contentEditable="true" suppressContentEditableWarning={true}>Organizer</p>
+              </div>
+              <div className="signature-block">
+                <label htmlFor="upload-sig-2" className="signature-line" id="sig-line-2"></label>
+                <p className="name" contentEditable="true" suppressContentEditableWarning={true}>{'{{ HOD\'s Name }}'}</p>
+                <p className="title" contentEditable="true" suppressContentEditableWarning={true}>Head of Department</p>
+              </div>
+              <div className="signature-block">
+                <label htmlFor="upload-sig-3" className="signature-line" id="sig-line-3"></label>
+                <p className="name" contentEditable="true" suppressContentEditableWarning={true}>{'{{ Principal\'s Name }}'}</p>
+                <p className="title" contentEditable="true" suppressContentEditableWarning={true}>Principal</p>
+              </div>
+            </footer>
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden controls for sidebar interaction */}
+      <div style={{display: 'none'}}>
+        <button id="add-text-btn" onClick={handleAddText}>Add Text</button>
+        <button id="add-logo-btn">Add Logo</button>
+        <button id="download-pdf" onClick={handleDownloadPDF}>Download PDF</button>
+        <button id="ai-generate-btn">Generate AI</button>
+        <input type="text" id="ai-prompt-input" />
+        
+        {/* Hidden file inputs */}
+        <input type="file" id="upload-sig-1" accept="image/*" />
+        <input type="file" id="upload-sig-2" accept="image/*" />
+        <input type="file" id="upload-sig-3" accept="image/*" />
+        <input type="file" id="upload-logo-dynamic" accept="image/*" />
+      </div>
+      </div> {/* Close parent container with body styles */}
+    </>
+  );
+};
+
+export default Canvas;

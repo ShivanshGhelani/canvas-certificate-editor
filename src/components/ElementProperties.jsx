@@ -1,0 +1,310 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  FaBold,
+  FaItalic,
+  FaUnderline,
+  FaStrikethrough,
+  FaAlignLeft,
+  FaAlignCenter,
+  FaAlignRight,
+  FaAlignJustify,
+  FaTrash,
+  FaTextHeight,
+} from 'react-icons/fa';
+
+// Convert computed rgb/rgba color to hex for the color input
+function rgbToHex(rgb) {
+  if (!rgb) return '#000000';
+  if (rgb.startsWith('#')) return rgb;
+  const m = rgb.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+  if (!m) return '#000000';
+  const toHex = (n) => Number(n).toString(16).padStart(2, '0');
+  return `#${toHex(m[1])}${toHex(m[2])}${toHex(m[3])}`;
+}
+
+const ElementProperties = ({ selectedElement }) => {
+  const [styleState, setStyleState] = useState({
+    fontSize: 16,
+    fontFamily: 'Arial',
+    fontWeight: 'normal',
+    fontStyle: 'normal',
+    textDecoration: 'none',
+    textAlign: 'left',
+    color: '#000000',
+    textTransform: 'none',
+    lineHeight: 1.2,
+    letterSpacing: 0,
+  });
+
+  // Initialize from computed style when selection changes
+  useEffect(() => {
+    if (!selectedElement) return;
+    const cs = getComputedStyle(selectedElement);
+    setStyleState({
+      fontSize: parseInt(cs.fontSize) || 16,
+      fontFamily: (cs.fontFamily?.split(',')[0] || 'Arial').replace(/"/g, ''),
+      fontWeight: cs.fontWeight || 'normal',
+      fontStyle: cs.fontStyle || 'normal',
+      textDecoration: cs.textDecoration || 'none',
+      textAlign: cs.textAlign || 'left',
+      color: rgbToHex(cs.color),
+      textTransform: cs.textTransform || 'none',
+      lineHeight: parseFloat(cs.lineHeight) / parseFloat(cs.fontSize) || 1.2,
+      letterSpacing: parseFloat(cs.letterSpacing) || 0,
+    });
+  }, [selectedElement]);
+
+  const isText = useMemo(() => {
+    if (!selectedElement) return false;
+    // Check if it's an IMG first
+    if (selectedElement.tagName === 'IMG') return false;
+    // For all other elements, assume they can have text
+    return true;
+  }, [selectedElement]);
+
+  const apply = (prop, value) => {
+    if (!selectedElement) return;
+    console.log('Applying style:', prop, value, 'to element:', selectedElement);
+    selectedElement.style[prop] = value;
+    setStyleState((s) => ({ ...s, [prop]: value }));
+  };
+
+
+  const incFont = (delta) => {
+    const next = Math.max(6, (Number(styleState.fontSize) || 16) + delta);
+    apply('fontSize', `${next}px`);
+    setStyleState((s) => ({ ...s, fontSize: next }));
+  };
+
+  const toggleTextDecoration = (part) => {
+    const parts = new Set((styleState.textDecoration || 'none').split(/\s+/).filter(Boolean));
+    if (parts.has('none')) parts.delete('none');
+    parts.has(part) ? parts.delete(part) : parts.add(part);
+    if (parts.size === 0) parts.add('none');
+    const next = Array.from(parts).join(' ');
+    apply('textDecoration', next);
+  };
+
+  const cycleCase = () => {
+    const order = ['none', 'uppercase', 'lowercase', 'capitalize'];
+    const idx = order.indexOf(styleState.textTransform);
+    const next = order[(idx + 1) % order.length];
+    apply('textTransform', next);
+  };
+
+  const setAlign = (val) => {
+    if (!selectedElement) return;
+    console.log('Setting text alignment to:', val, 'on element:', selectedElement);
+    
+    // For contentEditable elements, we need to set text alignment properly
+    selectedElement.style.textAlign = val;
+    
+    // Also set the style state
+    setStyleState(s => ({ ...s, textAlign: val }));
+    
+    // Force a refresh of the element's display
+    selectedElement.style.display = selectedElement.style.display || 'block';
+  };
+
+  const setLineHeight = (val) => {
+    // line-height can be unitless multiplier
+    apply('lineHeight', String(val));
+    setStyleState((s) => ({ ...s, lineHeight: Number(val) }));
+  };
+
+  const setLetterSpacing = (val) => {
+    apply('letterSpacing', `${val}px`);
+    setStyleState((s) => ({ ...s, letterSpacing: Number(val) }));
+  };
+
+  const onColor = (hex) => apply('color', hex);
+
+  const deleteElement = () => {
+    if (!selectedElement) return;
+    selectedElement.remove();
+  };
+
+  // Only show the toolbar for text elements that are properly selected
+  if (!selectedElement || 
+      selectedElement.tagName === 'IMG' || 
+      selectedElement.dataset?.type !== 'text' ||
+      !selectedElement.isConnected) {
+    return null;
+  }
+
+  return (
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+      <div className="max-w-full px-4 py-3">
+        <div className="flex items-center justify-center gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {/* Font family */}
+          <select
+            className="h-8 rounded border border-gray-300 px-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            value={styleState.fontFamily}
+            onChange={(e) => apply('fontFamily', e.target.value)}
+          >
+            <option>Canva Sans</option>
+            <option>Arial</option>
+            <option>Helvetica</option>
+            <option>Times New Roman</option>
+            <option>Georgia</option>
+            <option>Verdana</option>
+            <option>Roboto</option>
+            <option>Open Sans</option>
+          </select>
+
+              {/* Size stepper */}
+              <div className="flex h-9 items-stretch overflow-hidden rounded-md border border-gray-300">
+                <button
+                  className="px-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() => incFont(-1)}
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  className="w-14 border-x border-gray-300 text-center text-sm outline-none"
+                  value={styleState.fontSize}
+                  onChange={(e) => {
+                    const v = Math.max(6, Number(e.target.value || 0));
+                    apply('fontSize', `${v}px`);
+                    setStyleState((s) => ({ ...s, fontSize: v }));
+                  }}
+                />
+                <button
+                  className="px-2 text-gray-700 hover:bg-gray-100"
+                  onClick={() => incFont(1)}
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Color (A with active color underline) */}
+              <label className="relative flex h-9 w-9 items-center justify-center rounded-md hover:bg-gray-100 cursor-pointer">
+                <span className="text-base font-semibold" style={{ color: styleState.color }}>A</span>
+                <span 
+                  className="pointer-events-none absolute -bottom-0.5 h-1 w-5 rounded-full"
+                  style={{ backgroundColor: styleState.color }}
+                />
+                <input
+                  type="color"
+                  className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  value={styleState.color}
+                  onChange={(e) => onColor(e.target.value)}
+                />
+              </label>
+
+              {/* B I U S */}
+              <div className="mx-1 h-6 w-px bg-gray-200" />
+              <button
+                className={`h-9 rounded-md px-2 transition-colors ${Number(styleState.fontWeight) >= 700 || styleState.fontWeight === 'bold' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`}
+                onClick={() => apply('fontWeight', Number(styleState.fontWeight) >= 700 || styleState.fontWeight === 'bold' ? '400' : '700')}
+                title="Bold"
+              >
+                <FaBold />
+              </button>
+              <button
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.fontStyle === 'italic' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`}
+                onClick={() => apply('fontStyle', styleState.fontStyle === 'italic' ? 'normal' : 'italic')}
+                title="Italic"
+              >
+                <FaItalic />
+              </button>
+              <button
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.textDecoration.includes('underline') ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`}
+                onClick={() => toggleTextDecoration('underline')}
+                title="Underline"
+              >
+                <FaUnderline />
+              </button>
+              <button
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.textDecoration.includes('line-through') ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`}
+                onClick={() => toggleTextDecoration('line-through')}
+                title="Strikethrough"
+              >
+                <FaStrikethrough />
+              </button>
+
+              {/* aA (case) */}
+              <button
+                className={`h-9 rounded-md px-2 text-sm font-semibold transition-colors ${styleState.textTransform !== 'none' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`}
+                onClick={cycleCase}
+                title="Text case"
+              >
+                aA
+              </button>
+
+              {/* Alignment */}
+              <div className="mx-1 h-6 w-px bg-gray-200" />
+              <button 
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.textAlign === 'left' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`} 
+                onClick={() => setAlign('left')} 
+                title="Align left"
+              >
+                <FaAlignLeft />
+              </button>
+              <button 
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.textAlign === 'center' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`} 
+                onClick={() => setAlign('center')} 
+                title="Align center"
+              >
+                <FaAlignCenter />
+              </button>
+              <button 
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.textAlign === 'right' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`} 
+                onClick={() => setAlign('right')} 
+                title="Align right"
+              >
+                <FaAlignRight />
+              </button>
+              <button 
+                className={`h-9 rounded-md px-2 transition-colors ${styleState.textAlign === 'justify' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'hover:bg-gray-100'}`} 
+                onClick={() => setAlign('justify')} 
+                title="Justify"
+              >
+                <FaAlignJustify />
+              </button>
+
+              {/* Line height & Letter spacing */}
+              <div className="mx-1 h-6 w-px bg-gray-200" />
+              <div className="flex items-center gap-1">
+                <FaTextHeight className="text-gray-500" />
+                <select
+                  className="h-9 rounded-md border border-gray-300 px-1 text-sm outline-none hover:bg-gray-50 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  value={Number(styleState.lineHeight).toFixed(1)}
+                  onChange={(e) => setLineHeight(parseFloat(e.target.value))}
+                >
+                  {[0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0].map((v) => (
+                    <option key={v} value={v}>{v.toFixed(1)}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-gray-500 font-medium">LS</span>
+                <div className="flex items-center gap-1 bg-gray-100 rounded-md px-2 py-1">
+                  <button
+                    className="w-6 h-6 text-xs text-gray-600 hover:bg-gray-200 rounded flex items-center justify-center"
+                    onClick={() => setLetterSpacing(Math.max(-2, styleState.letterSpacing - 0.5))}
+                  >
+                    −
+                  </button>
+                  <span className="text-xs font-mono w-8 text-center">
+                    {styleState.letterSpacing.toFixed(1)}
+                  </span>
+                  <button
+                    className="w-6 h-6 text-xs text-gray-600 hover:bg-gray-200 rounded flex items-center justify-center"
+                    onClick={() => setLetterSpacing(Math.min(10, styleState.letterSpacing + 0.5))}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+          {/* Delete */}
+          <div className="mx-1 h-6 w-px bg-gray-200" />
+          <button className="h-9 rounded-md px-2 text-red-500 hover:bg-red-50" onClick={deleteElement} title="Delete"><FaTrash /></button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ElementProperties;
