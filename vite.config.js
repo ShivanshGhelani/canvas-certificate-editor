@@ -5,7 +5,7 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    port: 5000,
+    port: 3000,
     open: true
   },
   // For AI API calls, we'll proxy to a backend service or handle differently
