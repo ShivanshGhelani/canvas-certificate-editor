@@ -1,8 +1,36 @@
 import React, { useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import TextElement from './components/TextElement';
+import TextToolbar from './components/TextToolbar';
+import useTextElements from './hooks/useTextElements';
 
-const Canvas = () => {
+const Canvas = ({ onTextElementsChange }) => {
+  const {
+    textElements,
+    selectedElementId,
+    addTextElement,
+    updateTextElement,
+    deleteTextElement,
+    selectTextElement,
+    deselectAll,
+    getSelectedElement,
+    updateSelectedElement
+  } = useTextElements();
+
+  // Expose addTextElement function to parent component
+  React.useImperativeHandle(onTextElementsChange, () => ({
+    addTextElement: () => {
+      const canvasRect = document.getElementById('certificate-wrapper')?.getBoundingClientRect();
+      const centerX = canvasRect ? (canvasRect.width / 2) - 50 : 150;
+      const centerY = canvasRect ? (canvasRect.height / 2) - 12 : 150;
+      
+      addTextElement({
+        position: { x: centerX, y: centerY }
+      });
+    }
+  }), [addTextElement]);
+
   useEffect(() => {
     // Prevent multiple loading
     if (window.scriptsLoaded) return;
@@ -23,9 +51,7 @@ const Canvas = () => {
     const handleCanvasClick = (e) => {
       // Only deselect if clicking on the canvas wrapper itself, not its contents
       if (e.target === certificateWrapper || e.target.id === 'background-canvas') {
-        if (window.ElementSelection) {
-          window.ElementSelection.deselect();
-        }
+        deselectAll();
       }
     };
 
@@ -762,6 +788,12 @@ const Canvas = () => {
 
   return (
     <>
+      {/* Text Toolbar */}
+      <TextToolbar 
+        selectedElement={getSelectedElement()} 
+        onUpdate={updateSelectedElement}
+      />
+      
       {/* Add Google Fonts */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
@@ -807,6 +839,35 @@ const Canvas = () => {
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: 10;
             pointer-events: none;
+        }
+
+        /* Allow text elements to receive pointer events */
+        #dynamic-elements-container > * {
+            pointer-events: all;
+        }
+
+        /* Text gradient support */
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 100% 100%;
+        }
+
+        /* Resize handle styles */
+        .resize-handle {
+            position: absolute;
+            background: #3b82f6;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            z-index: 20;
+        }
+
+        .resize-handle:hover {
+            background: #2563eb;
+            transform: scale(1.1);
         }
 
         .certificate-content {
@@ -1032,7 +1093,27 @@ const Canvas = () => {
         
         <div className="certificate-container" id="certificate-foreground">
           <div id="dynamic-elements-container">
-            {/* Draggable elements will be added here by JavaScript */}
+            {/* React Text Elements */}
+            {textElements.map(element => (
+              <TextElement
+                key={element.id}
+                id={element.id}
+                text={element.text}
+                position={element.position}
+                fontSize={element.fontSize}
+                fontFamily={element.fontFamily}
+                color={element.color}
+                fontWeight={element.fontWeight}
+                fontStyle={element.fontStyle}
+                textAlign={element.textAlign}
+                textShadow={element.textShadow}
+                background={element.background}
+                isSelected={element.id === selectedElementId}
+                onSelect={selectTextElement}
+                onUpdate={updateTextElement}
+                onDelete={deleteTextElement}
+              />
+            ))}
           </div>
 
           <div className="certificate-content">

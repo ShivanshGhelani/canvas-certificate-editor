@@ -1,228 +1,227 @@
-# Certificate Editor - Node.js Application
+# Canvas Certificate Editor
 
-## � Modern Certificate Editor with AI-Powered Background Generation
+## ✨ Modern React Certificate Editor with Professional Export
 
-A full-stack Node.js application for creating and customizing professional certificates with AI-generated backgrounds, drag-and-drop elements, and PDF export capabilities.
+A modern React application for creating and customizing professional certificates with drag-and-drop elements, rich typography controls, and high-quality PDF export capabilities.
 
-## ✨ Features
+## 🚀 Features
 
 ### 🎨 **Certificate Design**
-- **Drag & Drop Interface** - Move and resize text and logo elements
-- **Live Text Editing** - Double-click to edit text directly
-- **Rich Typography** - Multiple font families and styling options
-- **Text Effects** - Shadows, colors, and alignment controls
-- **Logo Integration** - Upload and position logos with transparency
-
-### 🤖 **AI-Powered Backgrounds**
-- **Gemini AI Integration** - Generate custom backgrounds from text descriptions
-- **Safe Code Execution** - Server-side validation and security
-- **Rate Limiting** - Prevents API abuse
+- **Drag & Drop Interface** - Intuitive element positioning and resizing
+- **Live Text Editing** - Rich typography controls with real-time preview
+- **Font Management** - Multiple font families with size, weight, and style controls
+- **Text Formatting** - Bold, italic, underline, text alignment, and color customization
+- **Logo Integration** - Upload and position logos with precise controls
+- **Element Properties** - Advanced styling with line height and letter spacing
 
 ### 📄 **Export & Templates**
-- **High-Quality PDF Export** - Print-ready A4 landscape format
-- **Multiple Templates** - Pre-designed certificate layouts
-- **Image Export** - Alternative PNG/JPEG formats
+- **High-Quality PDF Export** - Print-ready A4 landscape format using jsPDF
+- **Image Export** - PNG and JPG export with html2canvas
+- **Template System** - Pre-designed certificate layouts
+- **Professional Output** - Clean, high-resolution exports suitable for printing
 
-### � **Security & Performance**
-- **Helmet.js Security** - Comprehensive security headers
-- **Rate Limiting** - API and file upload protection
-- **Input Validation** - Server-side validation for all inputs
-- **File Upload Security** - Image validation and size limits
+### 🎯 **Modern UI/UX**
+- **React-Powered Interface** - Modern component-based architecture
+- **TailwindCSS Styling** - Clean, responsive design
+- **Icon Integration** - React Icons for consistent visual elements
+- **Responsive Layout** - Sidebar, toolbar, and canvas layout
 
 ## 📁 Project Structure
 
 ```
-certificate-editor/
-├── server.js                 # Express server
-├── package.json              # Dependencies and scripts
-├── .env                      # Environment configuration
-├── .gitignore               # Git ignore rules
-├── scripts/
-│   └── copy-vendors.js      # Vendor file setup
-├── public/                  # Static files served by Express
-│   ├── index.html          # Main application HTML
-│   └── js/                 # Modular JavaScript files
-│       ├── core.js         # Core initialization
-│       ├── image-utils.js  # Image processing
-│       ├── element-manager.js # Element creation
+canvas-certificate-editor/
+├── package.json              # Dependencies and npm scripts
+├── vite.config.js           # Vite configuration
+├── tailwind.config.js       # TailwindCSS configuration
+├── eslint.config.js         # ESLint configuration
+├── index.html               # Main HTML entry point
+├── src/                     # React application source
+│   ├── main.jsx            # React entry point
+│   ├── App.jsx             # Main app component
+│   ├── App.css             # Global styles
+│   ├── index.css           # Base CSS imports
+│   ├── Canvas.jsx          # Certificate canvas component
+│   ├── assets/             # Static assets
+│   └── components/         # React components
+│       ├── Layout.jsx      # Main layout wrapper
+│       ├── TopBar.jsx      # Toolbar with export controls
+│       ├── Sidebar.jsx     # Template selection sidebar
+│       ├── ElementProperties.jsx  # Text formatting controls
+│       └── ImageProperties.jsx    # Image element controls
+├── public/                  # Static files
+│   ├── logo/               # Branding assets
+│   └── js/                 # Legacy JavaScript modules
+│       ├── core.js         # Background rendering
+│       ├── main.js         # Initialization and compatibility
+│       ├── simplified-editor.js   # Element creation/manipulation
+│       ├── download.js     # Export functionality
+│       ├── element-manager.js     # Dynamic element management
 │       ├── interactions.js # Drag & drop interactions
-│       ├── properties-panel.js # Text styling
-│       ├── ai-generator.js # AI background generation
-│       ├── download.js     # PDF export functionality
-│       └── vendors/        # Local vendor libraries
+│       ├── ai-generator.js # AI background generation (legacy)
+│       ├── properties-panel.js    # Element styling (legacy)
+│       └── vendors/        # External libraries
 │           ├── jspdf.umd.min.js
 │           └── html2canvas.min.js
-└── README.md               # This file
+└── README.md               # This documentation
 ```
 
-## �️ Installation & Setup
+## 🛠️ Installation & Setup
 
 ### Prerequisites
-- **Node.js** (v14.0.0 or higher)
+- **Node.js** (v16.0.0 or higher)
 - **npm** (comes with Node.js)
-- **Gemini AI API Key** (get from [Google AI Studio](https://makersuite.google.com/app/apikey))
 
 ### 1. Clone and Install
 ```bash
 # Clone the repository
-git clone <your-repo-url>
-cd certificate-editor
+git clone https://github.com/ShivanshGhelani/canvas-certificate-editor.git
+cd canvas-certificate-editor
 
 # Install dependencies
 npm install
-
-# Copy vendor files
-npm run postinstall
 ```
 
-### 2. Environment Configuration
-Create a `.env` file in the root directory:
-```env
-NODE_ENV=development
-PORT=3000
-GEMINI_API_KEY=your-gemini-api-key-here
-SESSION_SECRET=your-super-secret-session-key-change-this-in-production
-MAX_REQUESTS_PER_WINDOW=100
-AI_REQUESTS_PER_HOUR=10
-MAX_FILE_SIZE=5242880
-ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
-```
-
-### 3. Start the Application
+### 2. Development
 ```bash
-# Development mode (with auto-restart)
+# Start development server
 npm run dev
-
-# Production mode
-npm start
 ```
 
-Visit `http://localhost:3000` in your browser.
+### 3. Production Build
+```bash
+# Build for production
+npm run build
 
-## 📚 API Endpoints
-
-### `POST /api/generate-background`
-Generate AI-powered certificate backgrounds.
-
-**Request:**
-```json
-{
-  "prompt": "professional blue waves design"
-}
+# Preview production build
+npm run preview
 ```
 
-**Response:**
-```json
-{
-  "success": true,
-  "code": "// Generated JavaScript canvas code",
-  "timestamp": "2025-01-01T00:00:00.000Z"
-}
-```
+Visit `http://localhost:3000` (or the port shown in terminal) in your browser.
 
-### `POST /api/upload-image`
-Upload images for signatures and logos.
+## 🎮 Usage
 
-**Request:** Multipart form data with `image` field
+### Creating Certificates
+1. **Add Text Elements** - Click "Text" in the toolbar to add editable text
+2. **Add Logos** - Click "Logo" to upload and position image elements
+3. **Format Text** - Select text elements to access rich formatting controls
+4. **Drag & Drop** - Move elements by dragging them around the canvas
+5. **Export** - Use the Export menu to download as PDF, PNG, or JPG
 
-**Response:**
-```json
-{
-  "success": true,
-  "imageData": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
-  "originalName": "logo.png",
-  "size": 12345
-}
-```
+### Text Formatting
+- **Font Family** - Choose from professional font options
+- **Font Size** - Adjust with stepper controls or direct input
+- **Text Style** - Bold, italic, underline, strikethrough
+- **Alignment** - Left, center, right, justify
+- **Color** - Visual color picker with live preview
+- **Advanced** - Line height and letter spacing controls
 
-### `GET /api/templates`
-Get available certificate templates.
+### Export Options
+- **PDF Export** - High-quality print-ready A4 landscape format
+- **PNG Export** - Transparent background support for web use
+- **JPG Export** - Compressed format for smaller file sizes
 
-**Response:**
-```json
-{
-  "templates": [
-    {
-      "id": "participation",
-      "name": "Certificate of Participation",
-      "elements": [...]
-    }
-  ]
-}
-```
+## 🔧 Tech Stack
 
-### `GET /health`
-Health check endpoint.
+### Frontend
+- **React 19** - Modern component-based UI framework
+- **Vite** - Fast build tool and development server
+- **TailwindCSS** - Utility-first CSS framework
+- **React Icons** - Comprehensive icon library
 
-**Response:**
-```json
-{
-  "status": "OK",
-  "timestamp": "2025-01-01T00:00:00.000Z",
-  "uptime": 3600
-}
-```
+### Export & Canvas
+- **jsPDF** - PDF generation from HTML/Canvas
+- **html2canvas** - HTML to canvas conversion
+- **Canvas API** - Background rendering and graphics
 
-## 🔧 Development
+### Development Tools
+- **ESLint** - Code linting and formatting
+- **Vite Plugin React** - React support for Vite
+- **TailwindCSS Vite Plugin** - Integrated CSS processing
+
+## � Development
 
 ### Available Scripts
-- `npm start` - Start production server
-- `npm run dev` - Start development server with auto-restart
-- `npm run build` - Prepare for production (currently just validates)
-- `npm test` - Run tests (to be implemented)
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build optimized production bundle
+- `npm run preview` - Preview production build locally
+- `npm run lint` - Run ESLint code analysis
+
+### Project Architecture
+The application uses a hybrid architecture combining:
+
+1. **React Components** - Modern UI and state management
+2. **Vanilla JS Modules** - Certificate manipulation and legacy compatibility
+3. **Component Communication** - React components interface with JS modules via global window objects
 
 ### Adding New Features
-1. **New API Endpoints** - Add to `server.js`
-2. **Frontend Features** - Add to appropriate module in `public/js/`
-3. **Templates** - Add to the templates endpoint
-4. **Styling** - Modify CSS in `public/index.html`
 
-## � Deployment
+#### Adding New React Components
+```jsx
+// Create component in src/components/
+import React from 'react';
 
-### Environment Variables for Production
-```env
-NODE_ENV=production
-PORT=80
-GEMINI_API_KEY=your-production-api-key
-SESSION_SECRET=secure-random-string-for-production
-ALLOWED_ORIGINS=https://yourdomain.com
+const NewComponent = () => {
+  return <div>New Feature</div>;
+};
+
+export default NewComponent;
 ```
 
-### Docker Deployment (Optional)
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run postinstall
-EXPOSE 3000
-CMD ["npm", "start"]
+#### Adding Certificate Elements
+```javascript
+// Add to public/js/element-manager.js
+function createCustomElement(options) {
+  // Element creation logic
+}
 ```
 
-### Cloud Deployment
-- **Heroku**: Ready to deploy with Procfile
-- **Vercel**: Serverless-ready with minor modifications
-- **AWS/Google Cloud**: Standard Node.js deployment
+#### Styling with TailwindCSS
+```jsx
+// Use Tailwind utility classes
+<div className="bg-blue-500 text-white p-4 rounded-lg">
+  Styled Component
+</div>
+```
 
-## 🔒 Security Features
+## 🚀 Deployment
 
-- **Helmet.js** - Security headers
-- **Rate Limiting** - API abuse prevention
-- **Input Validation** - XSS and injection protection
-- **File Upload Security** - Image validation
-- **CORS Configuration** - Cross-origin protection
-- **Content Security Policy** - XSS mitigation
+### Vercel (Recommended)
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Deploy
+vercel
+```
+
+### Netlify
+```bash
+# Build the project
+npm run build
+
+# Deploy dist/ folder to Netlify
+```
+
+### Traditional Hosting
+```bash
+# Build production bundle
+npm run build
+
+# Upload dist/ folder to your web server
+```
 
 ## 🎯 Future Enhancements
 
-- [ ] **User Authentication** - User accounts and saved certificates
-- [ ] **Database Integration** - MongoDB/PostgreSQL for data persistence
 - [ ] **Real-time Collaboration** - Multiple users editing simultaneously
-- [ ] **Advanced Templates** - More certificate types and layouts
-- [ ] **Batch Processing** - Generate multiple certificates at once
-- [ ] **Analytics** - Usage tracking and insights
-- [ ] **White-label Solution** - Customizable branding
+- [ ] **Template Marketplace** - Community-driven certificate templates
+- [ ] **Advanced Graphics** - Shapes, borders, and decorative elements
+- [ ] **Database Integration** - Save and load certificate projects
+- [ ] **User Authentication** - Personal certificate libraries
+- [ ] **Batch Processing** - Generate multiple certificates with data import
+- [ ] **Advanced Export** - Vector formats (SVG, EPS)
+- [ ] **Mobile Responsive** - Touch-friendly mobile interface
+- [ ] **Template Designer** - Visual template creation tool
+- [ ] **Print Management** - Direct printer integration
 
 ## 📝 License
 
@@ -236,13 +235,28 @@ MIT License - see LICENSE file for details.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Development Guidelines
+- Follow React best practices and hooks patterns
+- Use TailwindCSS for styling
+- Maintain component modularity
+- Test features across different browsers
+- Document new features and APIs
+
 ## 📞 Support
 
 For issues and questions:
-- Create an issue on GitHub
-- Check the documentation
-- Review the API endpoints
+- Create an issue on [GitHub](https://github.com/ShivanshGhelani/canvas-certificate-editor/issues)
+- Check the documentation above
+- Review the component source code in `src/components/`
 
----
+## 🏆 Credits
 
-**Built with ❤️ using Node.js, Express, and AI**
+**Built with ❤️ using React, Vite, and TailwindCSS**
+
+### Key Libraries
+- [React](https://react.dev/) - UI Framework
+- [Vite](https://vite.dev/) - Build Tool
+- [TailwindCSS](https://tailwindcss.com/) - CSS Framework
+- [jsPDF](https://github.com/parallax/jsPDF) - PDF Generation
+- [html2canvas](https://html2canvas.hertzen.com/) - HTML to Canvas
+- [React Icons](https://react-icons.github.io/react-icons/) - Icon Library

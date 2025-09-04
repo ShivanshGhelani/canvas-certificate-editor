@@ -3,7 +3,7 @@ import {
   FaFileExport, FaFilePdf, FaFileImage, FaFont, FaImage, FaSignature, FaPalette, FaMagic, FaChevronDown, FaCertificate 
 } from 'react-icons/fa';
 
-const TopBar = () => {
+const TopBar = ({ onAddText }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
 
   const downloadPNG = () => {
@@ -50,8 +50,8 @@ const TopBar = () => {
 
   // Element actions
   const triggerAddText = () => {
-    if (window.addTextElement) {
-      window.addTextElement('add-text-btn');
+    if (onAddText) {
+      onAddText();
     }
   };
 

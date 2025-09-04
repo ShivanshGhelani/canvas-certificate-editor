@@ -1,2 +1,50 @@
 @import "tailwindcss";
 
+/* Corner resize handle styles */
+.resize-handle {
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.resize-handle:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.resize-handle:active {
+  background: #1d4ed8;
+}
+
+/* Edge resize handle styles */
+.resize-handle-edge {
+  background: #3b82f6;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  pointer-events: auto;
+}
+
+.resize-handle-edge:hover {
+  background: #2563eb;
+  transform: scale(1.1);
+}
+
+.resize-handle-edge:active {
+  background: #1d4ed8;
+}
+
+/* Cursor styles for resize handles */
+.cursor-nw-resize { cursor: nw-resize !important; }
+.cursor-ne-resize { cursor: ne-resize !important; }
+.cursor-sw-resize { cursor: sw-resize !important; }
+.cursor-se-resize { cursor: se-resize !important; }
+.cursor-n-resize { cursor: n-resize !important; }
+.cursor-s-resize { cursor: s-resize !important; }
+.cursor-w-resize { cursor: w-resize !important; }
+.cursor-e-resize { cursor: e-resize !important; }
