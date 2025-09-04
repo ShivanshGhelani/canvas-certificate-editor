@@ -1059,7 +1059,7 @@ const Canvas = () => {
 
       {/* Hidden controls for sidebar interaction */}
       <div style={{display: 'none'}}>
-        <button id="add-text-btn" onClick={handleAddText}>Add Text</button>
+        <button id="add-text-btn" onClick={handleAddText}>Add some Text</button>
         <button id="add-logo-btn">Add Logo</button>
         <button id="download-pdf" onClick={handleDownloadPDF}>Download PDF</button>
         <button id="ai-generate-btn">Generate AI</button>
