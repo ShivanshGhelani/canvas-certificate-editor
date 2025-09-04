@@ -1,35 +1,42 @@
 import React, { useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import TextElement from './components/TextElement';
-import TextToolbar from './components/TextToolbar';
-import useTextElements from './hooks/useTextElements';
+import { createSimpleTextElement, makeTextElementInteractive } from './components/SimpleTextElement';
 
 const Canvas = ({ onTextElementsChange }) => {
-  const {
-    textElements,
-    selectedElementId,
-    addTextElement,
-    updateTextElement,
-    deleteTextElement,
-    selectTextElement,
-    deselectAll,
-    getSelectedElement,
-    updateSelectedElement
-  } = useTextElements();
+  // Simple DOM-based text element creation (matching logo approach)
+  const addSimpleTextElement = () => {
+    const canvasRect = document.getElementById('certificate-wrapper')?.getBoundingClientRect();
+    const centerX = canvasRect ? (canvasRect.width / 2) - 100 : 150;
+    const centerY = canvasRect ? (canvasRect.height / 2) - 25 : 150;
+    
+    const element = createSimpleTextElement('Editable Text', {
+      position: { x: centerX, y: centerY },
+      size: { width: 200, height: 50 }
+    });
+    
+    // Position element in center of canvas
+    element.style.left = `${centerX}px`;
+    element.style.top = `${centerY}px`;
+    
+    const container = document.getElementById('dynamic-elements-container');
+    container.appendChild(element);
+    
+    // Make it interactive (same as logo)
+    makeTextElementInteractive(element);
+    
+    // Select the new element
+    if (window.selectElement) {
+      window.selectElement(element);
+    }
+    
+    return element;
+  };
 
   // Expose addTextElement function to parent component
   React.useImperativeHandle(onTextElementsChange, () => ({
-    addTextElement: () => {
-      const canvasRect = document.getElementById('certificate-wrapper')?.getBoundingClientRect();
-      const centerX = canvasRect ? (canvasRect.width / 2) - 50 : 150;
-      const centerY = canvasRect ? (canvasRect.height / 2) - 12 : 150;
-      
-      addTextElement({
-        position: { x: centerX, y: centerY }
-      });
-    }
-  }), [addTextElement]);
+    addTextElement: addSimpleTextElement
+  }), []);
 
   useEffect(() => {
     // Prevent multiple loading
@@ -788,12 +795,6 @@ const Canvas = ({ onTextElementsChange }) => {
 
   return (
     <>
-      {/* Text Toolbar */}
-      <TextToolbar 
-        selectedElement={getSelectedElement()} 
-        onUpdate={updateSelectedElement}
-      />
-      
       {/* Add Google Fonts */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
@@ -1093,27 +1094,7 @@ const Canvas = ({ onTextElementsChange }) => {
         
         <div className="certificate-container" id="certificate-foreground">
           <div id="dynamic-elements-container">
-            {/* React Text Elements */}
-            {textElements.map(element => (
-              <TextElement
-                key={element.id}
-                id={element.id}
-                text={element.text}
-                position={element.position}
-                fontSize={element.fontSize}
-                fontFamily={element.fontFamily}
-                color={element.color}
-                fontWeight={element.fontWeight}
-                fontStyle={element.fontStyle}
-                textAlign={element.textAlign}
-                textShadow={element.textShadow}
-                background={element.background}
-                isSelected={element.id === selectedElementId}
-                onSelect={selectTextElement}
-                onUpdate={updateTextElement}
-                onDelete={deleteTextElement}
-              />
-            ))}
+            {/* DOM-based elements (logos and text) are added here dynamically */}
           </div>
 
           <div className="certificate-content">
