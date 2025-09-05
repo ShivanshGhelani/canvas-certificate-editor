@@ -124,11 +124,13 @@ const ElementProperties = ({ selectedElement }) => {
     selectedElement.remove();
   };
 
-  // Only show the toolbar for text elements that are properly selected
+  // Only show the toolbar for text elements that are properly selected AND have text content
   if (!selectedElement || 
       selectedElement.tagName === 'IMG' || 
       selectedElement.dataset?.type !== 'text' ||
-      !selectedElement.isConnected) {
+      !selectedElement.isConnected ||
+      selectedElement.textContent.trim() === '' ||
+      selectedElement.textContent.trim() === 'Text must be present') {
     return null;
   }
 

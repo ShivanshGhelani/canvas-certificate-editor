@@ -25,10 +25,24 @@ const Canvas = ({ onTextElementsChange }) => {
     // Make it interactive (same as logo)
     makeTextElementInteractive(element);
     
-    // Select the new element
-    if (window.selectElement) {
-      window.selectElement(element);
-    }
+    // Force immediate selection and delete button creation
+    setTimeout(() => {
+      // Clear other selections
+      document.querySelectorAll('.dynamic-element').forEach(el => {
+        if (el !== element) {
+          el.style.border = '2px solid transparent';
+          el.classList.remove('selected');
+        }
+      });
+      
+      // Select and show delete button
+      element.style.border = '2px solid #3b82f6';
+      element.classList.add('selected');
+      window.selectedElement = element;
+      
+      // Force trigger click to show delete button
+      element.click();
+    }, 100);
     
     return element;
   };
@@ -53,6 +67,11 @@ const Canvas = ({ onTextElementsChange }) => {
 
     // Initialize the editor functionality directly
     initializeEditor();
+    
+    // Expose functions globally for SimpleTextElement.js and other modules
+    window.selectElement = selectElement;
+    window.makeElementDraggable = makeElementDraggable;
+    window.showDeleteButton = showDeleteButton;
 
     // Define the canvas click handler function
     const handleCanvasClick = (e) => {
@@ -467,14 +486,18 @@ const Canvas = ({ onTextElementsChange }) => {
   };
 
   const showDeleteButton = (element) => {
-    // Remove existing delete button
-    const existingBtn = document.querySelector('.delete-btn');
+    // Remove existing delete button first
+    const existingBtn = element.querySelector('.delete-btn');
     if (existingBtn) existingBtn.remove();
+    
+    // Also remove any global delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
     
     // Create delete button
     const deleteBtn = document.createElement('button');
     deleteBtn.className = 'delete-btn';
     deleteBtn.innerHTML = '×';
+    deleteBtn.title = 'Delete element';
     deleteBtn.style.cssText = `
       position: absolute;
       top: -12px;
@@ -494,23 +517,44 @@ const Canvas = ({ onTextElementsChange }) => {
       justify-content: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       transition: all 0.2s ease;
+      pointer-events: auto;
     `;
     
+    // Add click handler for deletion
     deleteBtn.addEventListener('click', (e) => {
       e.stopPropagation();
-      element.remove();
-      deleteBtn.remove();
-      window.selectedElement = null;
+      e.preventDefault();
+      
+      // Confirm deletion for better UX
+      if (confirm('Are you sure you want to delete this element?')) {
+        element.remove();
+        deleteBtn.remove();
+        window.selectedElement = null;
+        
+        // Hide any remaining delete buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+      }
     });
     
+    // Add hover effects
     deleteBtn.addEventListener('mouseenter', () => {
       deleteBtn.style.background = '#c82333';
-      deleteBtn.style.transform = 'scale(1.1)';
+      deleteBtn.style.transform = 'scale(1.15)';
+      deleteBtn.style.boxShadow = '0 4px 12px rgba(220, 53, 69, 0.4)';
     });
     
     deleteBtn.addEventListener('mouseleave', () => {
       deleteBtn.style.background = '#dc3545';
       deleteBtn.style.transform = 'scale(1)';
+      deleteBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+    });
+    
+    // Add keyboard support
+    deleteBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        deleteBtn.click();
+      }
     });
     
     element.appendChild(deleteBtn);
@@ -1000,30 +1044,32 @@ const Canvas = ({ onTextElementsChange }) => {
             background: #007bff;
         }
         
-        /* Delete button styles */
+        /* Delete button styles - positioned clearly above border */
         .delete-btn {
             position: absolute;
-            top: -12px;
-            right: -12px;
-            width: 24px;
-            height: 24px;
+            top: -15px;
+            right: -15px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             background: #dc3545;
             color: white;
-            border: 2px solid white;
+            border: 3px solid white;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            z-index: 1003;
+            z-index: 1005;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.4);
             transition: all 0.2s ease;
+            line-height: 1;
         }
         .delete-btn:hover {
             background: #c82333 !important;
             transform: scale(1.1) !important;
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.5) !important;
         }
 
         /* --- CONTROLS --- */
@@ -1069,10 +1115,11 @@ const Canvas = ({ onTextElementsChange }) => {
         /* --- FLOATING PROPERTIES PANEL --- */
         /* Properties panel moved to sidebar - removing old styles */
 
-        /* Element Selection Styles */
+        /* Element Selection Styles - adjusted to avoid delete button overlap */
         .dynamic-element.selected {
             outline: 2px solid #007bff !important;
-            outline-offset: 2px;
+            outline-offset: 3px !important;
+            border: 2px solid transparent !important;
         }
 
         .dynamic-element:hover:not(.selected) {

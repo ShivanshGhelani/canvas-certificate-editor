@@ -57,22 +57,176 @@ export const createSimpleTextElement = (
 
 // Function to make text element interactive (exactly like logo)
 export const makeTextElementInteractive = (element) => {
-  // Add selection on click
+  let originalText = element.textContent; // Store original text for cancel functionality
+  
+  // Add selection on click (exactly like logo implementation)
   element.addEventListener('click', (e) => {
     e.stopPropagation();
-    // Use the same selectElement function as logo
+    
+    // Clear other selections first
+    document.querySelectorAll('.dynamic-element').forEach(el => {
+      el.style.border = '2px solid transparent';
+      el.classList.remove('selected');
+      // Hide all resize handles
+      el.querySelectorAll('.resize-handle').forEach(handle => handle.style.display = 'none');
+    });
+    
+    // Remove all existing delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+    
+    // Select current element
+    element.style.border = '2px solid #3b82f6';
+    element.classList.add('selected');
+    window.selectedElement = element;
+    
+    // Force create and show delete button immediately
+    createDeleteButtonForElement(element);
+    
+    // Clear placeholder text if user clicks on it
+    if (element.textContent.trim() === 'Text must be present') {
+      element.textContent = '';
+      element.style.color = '#34495e';
+      element.style.fontStyle = 'normal';
+      originalText = '';
+      // Focus the element for immediate editing
+      setTimeout(() => element.focus(), 10);
+    }
+    
+    // Use the selectElement function if available (for resize handles)
     if (window.selectElement) {
       window.selectElement(element);
     }
   });
   
+  // Create delete button function specifically for text elements
+  function createDeleteButtonForElement(element) {
+    // Remove existing delete button first
+    const existingBtn = element.querySelector('.delete-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    // Create delete button with proper positioning above the border
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.innerHTML = '×';
+    deleteBtn.title = 'Delete element';
+    deleteBtn.style.cssText = `
+      position: absolute !important;
+      top: -15px !important;
+      right: -15px !important;
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50% !important;
+      background: #dc3545 !important;
+      color: white !important;
+      border: 3px solid white !important;
+      cursor: pointer !important;
+      font-size: 18px !important;
+      font-weight: bold !important;
+      z-index: 1005 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4) !important;
+      transition: all 0.2s ease !important;
+      pointer-events: auto !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+      line-height: 1 !important;
+    `;
+    
+    // Add click handler for deletion
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Confirm deletion
+      if (confirm('Are you sure you want to delete this element?')) {
+        element.remove();
+        deleteBtn.remove();
+        window.selectedElement = null;
+        
+        // Hide any remaining delete buttons
+        document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+        
+        // Dispatch event to hide text formatting panel
+        const event = new CustomEvent('elementDeselected', { 
+          detail: null
+        });
+        window.dispatchEvent(event);
+      }
+    });
+    
+    // Add hover effects
+    deleteBtn.addEventListener('mouseenter', () => {
+      deleteBtn.style.background = '#c82333';
+      deleteBtn.style.transform = 'scale(1.1)';
+      deleteBtn.style.boxShadow = '0 5px 15px rgba(220, 53, 69, 0.5)';
+    });
+    
+    deleteBtn.addEventListener('mouseleave', () => {
+      deleteBtn.style.background = '#dc3545';
+      deleteBtn.style.transform = 'scale(1)';
+      deleteBtn.style.boxShadow = '0 3px 10px rgba(0,0,0,0.4)';
+    });
+    
+    element.appendChild(deleteBtn);
+  }
+  
   // Handle focus/blur for editing vs dragging
   element.addEventListener('focus', () => {
+    // Clear placeholder if present
+    if (element.textContent.trim() === 'Text must be present') {
+      element.textContent = '';
+      element.style.color = '#34495e';
+      element.style.fontStyle = 'normal';
+      originalText = ''; // Reset original text since we're starting fresh
+    }
+    
     element.style.cursor = 'text';
+    element.style.outline = '2px solid #007bff';
+    element.style.outlineOffset = '2px';
+    element.style.backgroundColor = 'rgba(0, 123, 255, 0.05)';
+    
+    // Ensure delete button stays visible during editing
+    const deleteBtn = element.querySelector('.delete-btn');
+    if (deleteBtn) {
+      deleteBtn.style.display = 'flex !important';
+      deleteBtn.style.visibility = 'visible !important';
+      deleteBtn.style.opacity = '1 !important';
+    }
   });
   
   element.addEventListener('blur', () => {
     element.style.cursor = 'move';
+    element.style.outline = 'none';
+    element.style.backgroundColor = 'transparent';
+    
+    // Check if text is empty and add placeholder
+    const text = element.textContent.trim();
+    if (text === '') {
+      element.style.color = '#999';
+      element.textContent = 'Text must be present';
+      element.style.fontStyle = 'italic';
+      
+      // Hide text formatting panel when no text
+      const event = new CustomEvent('elementDeselected', { 
+        detail: null
+      });
+      window.dispatchEvent(event);
+    } else {
+      originalText = element.textContent; // Update stored text after editing
+      element.style.color = '#34495e';
+      element.style.fontStyle = 'normal';
+    }
+    
+    // Ensure delete button remains visible after editing
+    const deleteBtn = element.querySelector('.delete-btn');
+    if (deleteBtn) {
+      deleteBtn.style.display = 'flex !important';
+      deleteBtn.style.visibility = 'visible !important';
+      deleteBtn.style.opacity = '1 !important';
+    }
+    
     // Force recreate and show resize handles after editing
     if (element.classList.contains('selected')) {
       setTimeout(() => {
@@ -90,9 +244,93 @@ export const makeTextElementInteractive = (element) => {
     }
   });
   
-  // Keep element selected and handles visible after editing
+  // Add beforeinput event to clear placeholder immediately when user types
+  element.addEventListener('beforeinput', (e) => {
+    // Clear placeholder text immediately when user starts typing
+    if (element.textContent.trim() === 'Text must be present') {
+      element.textContent = '';
+      element.style.color = '#34495e';
+      element.style.fontStyle = 'normal';
+      originalText = '';
+    }
+  });
+  
+  // Add keyboard support for better editing experience
+  element.addEventListener('keydown', (e) => {
+    // Clear placeholder text when user starts typing any character
+    if (element.textContent.trim() === 'Text must be present' && 
+        e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      element.textContent = '';
+      element.style.color = '#34495e';
+      element.style.fontStyle = 'normal';
+      originalText = '';
+    }
+    
+    if (e.key === 'Escape') {
+      // Cancel editing and restore original text
+      e.preventDefault();
+      if (originalText === '' || originalText === 'Text must be present') {
+        element.style.color = '#999';
+        element.textContent = 'Text must be present';
+        element.style.fontStyle = 'italic';
+      } else {
+        element.textContent = originalText;
+        element.style.color = '#34495e';
+        element.style.fontStyle = 'normal';
+      }
+      element.blur();
+    } else if (e.key === 'Enter' && !e.shiftKey) {
+      // Finish editing on Enter (unless Shift+Enter for new line)
+      e.preventDefault();
+      element.blur();
+    }
+  });
+  
+  // Add text validation and enhanced input handling
   element.addEventListener('input', () => {
+    const text = element.textContent.trim();
+    
+    // Clear placeholder styling as soon as user types anything
+    if (element.style.color === 'rgb(153, 153, 153)' || element.style.fontStyle === 'italic') {
+      element.style.color = '#34495e';
+      element.style.fontStyle = 'normal';
+    }
+    
+    // If text becomes empty after editing, show placeholder message
+    if (text === '' || text === 'Text must be present') {
+      setTimeout(() => {
+        // Only show placeholder if still empty after a brief delay
+        if (element.textContent.trim() === '') {
+          element.style.color = '#999';
+          element.textContent = 'Text must be present';
+          element.style.fontStyle = 'italic';
+          
+          // Hide text formatting panel when no text
+          const event = new CustomEvent('elementDeselected', { 
+            detail: null
+          });
+          window.dispatchEvent(event);
+        }
+      }, 100);
+    } else {
+      // Show text formatting panel when text exists and element is selected
+      if (element.classList.contains('selected')) {
+        const event = new CustomEvent('elementSelected', { 
+          detail: element
+        });
+        window.dispatchEvent(event);
+      }
+    }
+    
     if (element.classList.contains('selected')) {
+      // Ensure delete button stays visible during typing
+      const deleteBtn = element.querySelector('.delete-btn');
+      if (deleteBtn) {
+        deleteBtn.style.display = 'flex !important';
+        deleteBtn.style.visibility = 'visible !important';
+        deleteBtn.style.opacity = '1 !important';
+      }
+      
       setTimeout(() => {
         // Check if handles exist, if not recreate them
         const handles = element.querySelectorAll('.resize-handle');
