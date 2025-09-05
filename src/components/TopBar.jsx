@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
-  FaFileExport, FaFilePdf, FaFileImage, FaFont, FaImage, FaSignature, FaPalette, FaMagic, FaChevronDown, FaCertificate 
+  FaFileExport, FaFilePdf, FaFileImage, FaFont, FaImage, FaSignature, FaPalette, FaMagic, FaChevronDown, FaCertificate, FaUpload, FaTrash, FaThLarge 
 } from 'react-icons/fa';
 
 const TopBar = ({ onAddText }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showBackgroundMenu, setShowBackgroundMenu] = useState(false);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.relative')) {
+        setShowExportMenu(false);
+        setShowBackgroundMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const downloadPNG = () => {
     const certificateWrapper = document.getElementById('certificate-wrapper');
@@ -55,11 +71,97 @@ const TopBar = ({ onAddText }) => {
     }
   };
 
+  const openTemplateSelector = () => {
+    if (window.templateManager) {
+      window.templateManager.showModal();
+    }
+  };
+
   const triggerAddLogo = () => {
     const logoInput = document.getElementById('upload-logo-dynamic');
     if (logoInput) {
       logoInput.click();
     }
+  };
+
+  const triggerAddSignature = () => {
+    // Create a file input for signature upload
+    const signatureInput = document.createElement('input');
+    signatureInput.type = 'file';
+    signatureInput.accept = 'image/*';
+    signatureInput.style.display = 'none';
+    
+    signatureInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          let imageSrc = e.target.result;
+          
+          // Apply automatic background and shadow removal
+          if (window.enhancedBackgroundRemoval) {
+            try {
+              imageSrc = await window.enhancedBackgroundRemoval(imageSrc, {
+                tolerance: 30,
+                shadowTolerance: 40,
+                edgeSmoothing: true,
+                removeWhite: true,
+                removeShadows: true,
+                shadowDetectionSensitivity: 0.7
+              });
+            } catch (error) {
+              console.warn('Enhanced background removal failed, trying basic removal:', error);
+              // Fallback to basic removal
+              if (window.removeWhiteBackground) {
+                try {
+                  imageSrc = await window.removeWhiteBackground(imageSrc);
+                } catch (fallbackError) {
+                  console.warn('Basic background removal also failed:', fallbackError);
+                }
+              }
+            }
+          } else if (window.removeWhiteBackground) {
+            try {
+              imageSrc = await window.removeWhiteBackground(imageSrc);
+            } catch (error) {
+              console.warn('Background removal failed, using original image:', error);
+            }
+          }
+          
+          // Create signature element using Canvas function
+          if (window.createSimpleSignatureElement) {
+            const element = window.createSimpleSignatureElement(imageSrc);
+            const container = document.getElementById('dynamic-elements-container');
+            
+            if (container) {
+              // Position in center
+              const containerRect = container.getBoundingClientRect();
+              const centerX = containerRect.width / 2 - 75;
+              const centerY = containerRect.height / 2 - 40;
+              
+              element.style.left = centerX + 'px';
+              element.style.top = centerY + 'px';
+              element.style.transform = 'none';
+              
+              container.appendChild(element);
+              
+              // Select the new element
+              if (window.selectElement) {
+                window.selectElement(element);
+              }
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      // Clean up
+      document.body.removeChild(signatureInput);
+    });
+    
+    // Add to DOM and trigger click
+    document.body.appendChild(signatureInput);
+    signatureInput.click();
   };
 
   const generateAIBackground = () => {
@@ -68,6 +170,18 @@ const TopBar = ({ onAddText }) => {
     if (prompt && promptInput) {
       promptInput.value = prompt;
       document.getElementById('ai-generate-btn')?.click();
+    }
+  };
+
+  const triggerBackgroundUpload = () => {
+    if (window.triggerBackgroundUpload) {
+      window.triggerBackgroundUpload();
+    }
+  };
+
+  const resetBackground = () => {
+    if (window.resetBackground) {
+      window.resetBackground();
     }
   };
 
@@ -92,21 +206,69 @@ const TopBar = ({ onAddText }) => {
 
         <button 
           className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+          onClick={openTemplateSelector}
+        >
+          <FaThLarge />
+          <span>Templates</span>
+        </button>
+
+        <button 
+          className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
           onClick={triggerAddLogo}
         >
           <FaImage />
           <span>Logo</span>
         </button>
 
-        <button 
-          className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
-        >
-          <FaPalette />
-          <span>Background</span>
-        </button>
+        <div className="relative">
+          <button 
+            className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+            onClick={() => setShowBackgroundMenu(!showBackgroundMenu)}
+          >
+            <FaPalette />
+            <span>Background</span>
+            <FaChevronDown className={`transition-transform duration-200 ${showBackgroundMenu ? 'rotate-180' : ''}`} />
+          </button>
+
+          {showBackgroundMenu && (
+            <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl min-w-48 z-50 animate-fade-in-down">
+              <button
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 first:rounded-t-lg"
+                onClick={() => {
+                  openTemplateSelector();
+                  setShowBackgroundMenu(false);
+                }}
+              >
+                <FaThLarge className="text-purple-600" />
+                <span>Choose Template</span>
+              </button>
+              <button
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
+                onClick={() => {
+                  triggerBackgroundUpload();
+                  setShowBackgroundMenu(false);
+                }}
+              >
+                <FaUpload className="text-blue-600" />
+                <span>Upload Custom Background</span>
+              </button>
+              <button
+                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 last:rounded-b-lg border-t border-gray-100"
+                onClick={() => {
+                  resetBackground();
+                  setShowBackgroundMenu(false);
+                }}
+              >
+                <FaTrash className="text-red-600" />
+                <span>Reset to Default</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         <button 
           className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+          onClick={triggerAddSignature}
         >
           <FaSignature />
           <span>Signature</span>

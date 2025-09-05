@@ -4,6 +4,23 @@ import jsPDF from 'jspdf';
 import { createSimpleTextElement, makeTextElementInteractive } from './components/SimpleTextElement';
 
 const Canvas = ({ onTextElementsChange }) => {
+  // Load enhanced background removal if available
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = '/js/enhanced-background-removal.js';
+    script.onload = () => {
+      console.log('Enhanced background removal loaded');
+    };
+    document.head.appendChild(script);
+    
+    return () => {
+      const existingScript = document.querySelector('script[src="/js/enhanced-background-removal.js"]');
+      if (existingScript) {
+        document.head.removeChild(existingScript);
+      }
+    };
+  }, []);
+
   // Simple DOM-based text element creation (matching logo approach)
   const addSimpleTextElement = () => {
     const canvasRect = document.getElementById('certificate-wrapper')?.getBoundingClientRect();
@@ -61,6 +78,24 @@ const Canvas = ({ onTextElementsChange }) => {
     window.html2canvas = html2canvas;
     window.jsPDF = jsPDF;
     
+    // Load image processing utilities
+    const loadImageUtils = () => {
+      const script = document.createElement('script');
+      script.src = '/js/image-utils.js';
+      script.onload = () => {
+        console.log('Image utilities loaded');
+        // Expose the function globally
+        if (typeof removeWhiteBackground !== 'undefined') {
+          window.removeWhiteBackground = removeWhiteBackground;
+        }
+      };
+      document.head.appendChild(script);
+    };
+    
+    if (!window.removeWhiteBackground) {
+      loadImageUtils();
+    }
+    
     // Initialize global variables to prevent conflicts
     window.elementCounter = 0;
     window.selectedElement = null;
@@ -72,6 +107,16 @@ const Canvas = ({ onTextElementsChange }) => {
     window.selectElement = selectElement;
     window.makeElementDraggable = makeElementDraggable;
     window.showDeleteButton = showDeleteButton;
+    window.createSimpleSignatureElement = createSimpleSignatureElement;
+    window.triggerAddSignature = triggerAddSignature;
+    window.triggerBackgroundUpload = triggerBackgroundUpload;
+    window.setBackgroundImage = setBackgroundImage;
+    window.resetBackground = resetBackground;
+    
+    // Expose image processing functions
+    if (typeof removeWhiteBackground !== 'undefined') {
+      window.removeWhiteBackground = removeWhiteBackground;
+    }
 
     // Define the canvas click handler function
     const handleCanvasClick = (e) => {
@@ -119,6 +164,28 @@ const Canvas = ({ onTextElementsChange }) => {
       
       logoInput.addEventListener('change', handleLogoUpload);
     }
+
+    // Setup signature upload buttons
+    const signatureInputs = ['upload-sig-1', 'upload-sig-2', 'upload-sig-3'];
+    signatureInputs.forEach((inputId) => {
+      const sigInput = document.getElementById(inputId);
+      if (sigInput && !sigInput.hasAttribute('data-initialized')) {
+        sigInput.setAttribute('data-initialized', 'true');
+        sigInput.addEventListener('change', handleSignatureUpload);
+      }
+    });
+
+    // Setup signature line click handlers to trigger new signature system
+    const signatureLines = ['sig-line-1', 'sig-line-2', 'sig-line-3'];
+    signatureLines.forEach((lineId) => {
+      const sigLine = document.getElementById(lineId);
+      if (sigLine && !sigLine.hasAttribute('data-initialized')) {
+        sigLine.setAttribute('data-initialized', 'true');
+        sigLine.addEventListener('click', () => {
+          triggerAddSignature();
+        });
+      }
+    });
 
     // Setup download button
     const downloadBtn = document.getElementById('download-pdf');
@@ -178,6 +245,162 @@ const Canvas = ({ onTextElementsChange }) => {
     }
   };
 
+  const handleSignatureUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        let imageSrc = e.target.result;
+        
+        // Apply automatic background removal
+        if (window.removeWhiteBackground) {
+          try {
+            imageSrc = await window.removeWhiteBackground(imageSrc);
+          } catch (error) {
+            console.warn('Background removal failed, using original image:', error);
+          }
+        }
+        
+        const element = createSimpleSignatureElement(imageSrc);
+        const container = document.getElementById('dynamic-elements-container');
+        
+        // Position in center with proper pixel values
+        const containerRect = container.getBoundingClientRect();
+        const centerX = containerRect.width / 2 - 75; // Half of default signature width
+        const centerY = containerRect.height / 2 - 40; // Half of default signature height
+        
+        element.style.left = centerX + 'px';
+        element.style.top = centerY + 'px';
+        element.style.transform = 'none'; // Remove transform for proper positioning
+        
+        container.appendChild(element);
+        selectElement(element);
+        
+        // Clear the file input to prevent issues
+        e.target.value = '';
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerAddSignature = () => {
+    // Create a file input for signature upload
+    const signatureInput = document.createElement('input');
+    signatureInput.type = 'file';
+    signatureInput.accept = 'image/*';
+    signatureInput.style.display = 'none';
+    
+    signatureInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          let imageSrc = e.target.result;
+          
+          // Apply automatic background removal
+          if (window.removeWhiteBackground) {
+            try {
+              imageSrc = await window.removeWhiteBackground(imageSrc);
+            } catch (error) {
+              console.warn('Background removal failed, using original image:', error);
+            }
+          }
+          
+          const element = createSimpleSignatureElement(imageSrc);
+          const container = document.getElementById('dynamic-elements-container');
+          
+          // Position in center
+          const containerRect = container.getBoundingClientRect();
+          const centerX = containerRect.width / 2 - 75;
+          const centerY = containerRect.height / 2 - 40;
+          
+          element.style.left = centerX + 'px';
+          element.style.top = centerY + 'px';
+          element.style.transform = 'none';
+          
+          container.appendChild(element);
+          selectElement(element);
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      // Clean up
+      document.body.removeChild(signatureInput);
+    });
+    
+    // Add to DOM and trigger click
+    document.body.appendChild(signatureInput);
+    signatureInput.click();
+  };
+
+  // Background design upload and management system
+  const handleBackgroundUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageSrc = e.target.result;
+        setBackgroundImage(imageSrc);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const setBackgroundImage = (imageSrc) => {
+    const canvas = document.getElementById('background-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Load and draw the background image
+    const img = new Image();
+    img.onload = () => {
+      // Clear canvas first
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw image to fill the entire canvas
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      
+      // Store the background for future use
+      window.currentBackgroundImage = imageSrc;
+    };
+    img.src = imageSrc;
+  };
+
+  const resetBackground = () => {
+    const canvas = document.getElementById('background-canvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Clear current background
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Reset to default drawing function
+    if (window.drawBackground && typeof window.drawBackground === 'function') {
+      window.drawBackground();
+    }
+    
+    // Clear stored background
+    delete window.currentBackgroundImage;
+  };
+
+  const triggerBackgroundUpload = () => {
+    const backgroundInput = document.createElement('input');
+    backgroundInput.type = 'file';
+    backgroundInput.accept = 'image/*';
+    backgroundInput.style.display = 'none';
+    
+    backgroundInput.addEventListener('change', handleBackgroundUpload);
+    
+    // Add to DOM and trigger click
+    document.body.appendChild(backgroundInput);
+    backgroundInput.click();
+    
+    // Clean up after selection
+    setTimeout(() => {
+      if (document.body.contains(backgroundInput)) {
+        document.body.removeChild(backgroundInput);
+      }
+    }, 1000);
+  };
+
   const handleDownloadPDF = async () => {
     // Hide selection indicators before generating PDF
     if (window.selectedElement) {
@@ -199,15 +422,15 @@ const Canvas = ({ onTextElementsChange }) => {
         backgroundColor: '#ffffff'
       });
       
-      // Create PDF document (A4 landscape)
+      // Create PDF document (A4 portrait - 300 DPI)
       const doc = new jsPDF({ 
-        orientation: 'landscape', 
+        orientation: 'portrait', 
         unit: 'mm', 
-        format: [297, 210] 
+        format: [210, 297] 
       });
       
       const imgData = canvas.toDataURL('image/png');
-      doc.addImage(imgData, 'PNG', 0, 0, 297, 210);
+      doc.addImage(imgData, 'PNG', 0, 0, 210, 297);
       
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
@@ -441,6 +664,113 @@ const Canvas = ({ onTextElementsChange }) => {
     return wrapper;
   };
 
+  // Create signature element function (same as logo but with background removal)
+  
+  const createSimpleSignatureElement = (imageSrc) => {
+    window.elementCounter = (window.elementCounter || 0) + 1;
+    
+    // Create a wrapper div to hold the image and resize handles
+    const wrapper = document.createElement('div');
+    wrapper.className = 'dynamic-element';
+    wrapper.dataset.type = 'signature';
+    
+    // Create the actual image element
+    const element = document.createElement('img');
+    element.src = imageSrc;
+    element.style.cssText = `
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    `;
+    
+    // Style the wrapper (better proportions for signatures)
+    wrapper.style.cssText = `
+      position: absolute;
+      width: 150px;
+      height: 80px;
+      cursor: move;
+      border: 2px solid transparent;
+      z-index: 10;
+      user-select: none;
+    `;
+    
+    // Add the image to the wrapper
+    wrapper.appendChild(element);
+    
+    // Add selection on click
+    wrapper.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectElement(wrapper);
+    });
+    
+    // Add double-click to replace signature with background removal
+    wrapper.addEventListener('dblclick', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Create temporary file input
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/*';
+      fileInput.style.display = 'none';
+      
+      fileInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            let processedSrc = e.target.result;
+            
+            // Apply enhanced background removal if available
+            if (window.enhancedBackgroundRemoval) {
+              try {
+                processedSrc = await window.enhancedBackgroundRemoval(e.target.result, {
+                  tolerance: 30,
+                  shadowTolerance: 40,
+                  edgeSmoothing: true,
+                  removeWhite: true,
+                  removeShadows: true,
+                  shadowDetectionSensitivity: 0.7
+                });
+              } catch (error) {
+                console.warn('Enhanced background removal failed, trying basic removal:', error);
+                // Fallback to basic removal
+                if (window.removeWhiteBackground) {
+                  try {
+                    processedSrc = await window.removeWhiteBackground(e.target.result);
+                  } catch (fallbackError) {
+                    console.warn('Basic background removal also failed:', fallbackError);
+                  }
+                }
+              }
+            } else if (window.removeWhiteBackground) {
+              try {
+                processedSrc = await window.removeWhiteBackground(e.target.result);
+              } catch (error) {
+                console.warn('Background removal failed, using original:', error);
+              }
+            }
+            
+            element.src = processedSrc;
+          };
+          reader.readAsDataURL(file);
+        }
+        // Clean up
+        document.body.removeChild(fileInput);
+      });
+      
+      // Add to DOM and trigger click
+      document.body.appendChild(fileInput);
+      fileInput.click();
+    });
+    
+    // Make draggable and resizable with full functionality
+    makeElementDraggable(wrapper);
+    
+    return wrapper;
+  };
+
   const selectElement = (element) => {
     // Clear previous selections
     document.querySelectorAll('.dynamic-element').forEach(el => {
@@ -450,8 +780,13 @@ const Canvas = ({ onTextElementsChange }) => {
       el.querySelectorAll('.resize-handle').forEach(handle => handle.style.display = 'none');
     });
     
-    // Select current element
-    element.style.border = '2px solid #3b82f6';
+    // Select current element with appropriate styling
+    if (element.classList.contains('template-element')) {
+      element.style.border = '2px solid #3b82f6';
+    } else {
+      element.style.border = '2px solid #3b82f6';
+    }
+    
     element.classList.add('selected');
     window.selectedElement = element;
     
@@ -461,27 +796,30 @@ const Canvas = ({ onTextElementsChange }) => {
     });
     window.dispatchEvent(event);
     
-    // Force recreate and show resize handles for selected element
-    setTimeout(() => {
-      // Remove existing handles first
-      element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
-      
-      // Recreate all handles using stored function
-      if (element.addResizeHandles) {
-        element.addResizeHandles();
-      } else {
-        console.log('No addResizeHandles function found on element:', element.dataset.type);
-      }
-      
-      // Force show all handles
-      element.querySelectorAll('.resize-handle').forEach(handle => {
-        handle.style.display = 'block';
-        handle.style.visibility = 'visible';
-        handle.style.opacity = '1';
-      });
-    }, 50);
+    // Handle resize handles - template elements don't need them
+    if (!element.classList.contains('template-element')) {
+      // Force recreate and show resize handles for regular elements
+      setTimeout(() => {
+        // Remove existing handles first
+        element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
+        
+        // Recreate all handles using stored function
+        if (element.addResizeHandles) {
+          element.addResizeHandles();
+        } else {
+          console.log('No addResizeHandles function found on element:', element.dataset.type);
+        }
+        
+        // Force show all handles
+        element.querySelectorAll('.resize-handle').forEach(handle => {
+          handle.style.display = 'block';
+          handle.style.visibility = 'visible';
+          handle.style.opacity = '1';
+        });
+      }, 50);
+    }
     
-    // Show delete button
+    // Show delete button (template elements get a special delete behavior)
     showDeleteButton(element);
   };
 
@@ -782,16 +1120,31 @@ const Canvas = ({ onTextElementsChange }) => {
         const newLeft = startLeft + deltaX;
         const newTop = startTop + deltaY;
         
-        // Constrain to certificate boundaries
-        const container = document.getElementById('certificate-wrapper');
-        const containerRect = container.getBoundingClientRect();
-        const elementRect = element.getBoundingClientRect();
-        
-        const maxLeft = containerRect.width - elementRect.width;
-        const maxTop = containerRect.height - elementRect.height;
-        
-        element.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
-        element.style.top = Math.max(0, Math.min(maxTop, newTop)) + 'px';
+        // Different constraints for template elements vs regular elements
+        if (element.classList.contains('template-element')) {
+          // Template elements can move within a broader range but stay within certificate
+          const container = document.getElementById('certificate-wrapper');
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+          
+          // Allow template to move within certificate boundaries
+          const maxLeft = containerRect.width - elementRect.width;
+          const maxTop = containerRect.height - elementRect.height;
+          
+          element.style.left = Math.max(-50, Math.min(maxLeft + 50, newLeft)) + 'px';
+          element.style.top = Math.max(-50, Math.min(maxTop + 50, newTop)) + 'px';
+        } else {
+          // Regular elements - constrain to certificate boundaries
+          const container = document.getElementById('certificate-wrapper');
+          const containerRect = container.getBoundingClientRect();
+          const elementRect = element.getBoundingClientRect();
+          
+          const maxLeft = containerRect.width - elementRect.width;
+          const maxTop = containerRect.height - elementRect.height;
+          
+          element.style.left = Math.max(0, Math.min(maxLeft, newLeft)) + 'px';
+          element.style.top = Math.max(0, Math.min(maxTop, newTop)) + 'px';
+        }
       };
       
       const handleDragUp = () => {
@@ -860,11 +1213,12 @@ const Canvas = ({ onTextElementsChange }) => {
         /* --- ESSENTIAL STRUCTURE --- */
         .certificate-wrapper {
             position: relative;
-            width: 297mm;
-            height: 210mm;
+            width: 210mm;
+            height: 297mm;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             background-color: var(--modern-bg);
             overflow: hidden;
+            margin: 0 auto;
         }
 
         #background-canvas {
@@ -1036,12 +1390,15 @@ const Canvas = ({ onTextElementsChange }) => {
             border-radius: 3px;
         }
         
-        /* Better visual feedback for text elements */
+        /* Better visual feedback for different element types */
         .dynamic-element[data-type="text"]:hover .resize-handle {
             background: #28a745;
         }
         .dynamic-element[data-type="logo"]:hover .resize-handle {
             background: #007bff;
+        }
+        .dynamic-element[data-type="signature"]:hover .resize-handle {
+            background: #6f42c1;
         }
         
         /* Delete button styles - positioned clearly above border */
@@ -1082,11 +1439,58 @@ const Canvas = ({ onTextElementsChange }) => {
             align-items: flex-end;
             width: 100%;
             margin-top: auto;
+            position: relative;
+            min-height: 120px;
         }
 
         .signature-block {
             padding-top: 10px;
-            width: 250px; 
+            width: 250px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Template-based absolute positioning for signature blocks */
+        .signature-block.template-positioned {
+            position: absolute !important;
+            width: auto !important;
+            min-width: 180px;
+            max-width: 220px;
+        }
+
+        /* Template element styles */
+        .template-element {
+            border: 2px dashed transparent !important;
+            transition: all 0.3s ease;
+            background-color: transparent !important;
+        }
+
+        .template-element:hover:not(.selected) {
+            border: 2px dashed rgba(0, 123, 255, 0.5) !important;
+        }
+
+        .template-element.selected {
+            border: 2px solid #007bff !important;
+            outline: none !important;
+        }
+
+        .template-element .template-info-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .template-element:hover .template-info-overlay {
+            opacity: 1;
         }
 
         .signature-line {
@@ -1137,7 +1541,7 @@ const Canvas = ({ onTextElementsChange }) => {
       {/* Parent container with converted body styles using Tailwind */}
       <div className="bg-transparent flex flex-col items-center justify-center min-h-auto m-0 p-0 font-sans" style={{fontFamily: "'Roboto', sans-serif"}}>
         <div className="certificate-wrapper" id="certificate-wrapper">
-        <canvas id="background-canvas" width="1123" height="794"></canvas>
+        <canvas id="background-canvas" width="2480" height="3508"></canvas>
         
         <div className="certificate-container" id="certificate-foreground">
           <div id="dynamic-elements-container">

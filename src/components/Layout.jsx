@@ -47,8 +47,15 @@ const Layout = () => {
         ) : selectedElement && selectedElement.dataset?.type === 'text' ? (
           <ElementProperties selectedElement={selectedElement} />
         ) : null}
-        <div className='flex-1 flex items-center justify-center overflow-auto  p-4 bg-gray-200'>
-          <Canvas onTextElementsChange={canvasRef} />
+        <div className='flex-1 flex items-center justify-center overflow-auto p-4 bg-gray-200'>
+          <div className="certificate-display-wrapper" style={{
+            transform: 'scale(0.6)',
+            transformOrigin: 'center',
+            maxWidth: '100%',
+            maxHeight: '100%'
+          }}>
+            <Canvas onTextElementsChange={canvasRef} />
+          </div>
         </div>
       </div>
     </div>

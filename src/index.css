@@ -48,3 +48,19 @@
 .cursor-s-resize { cursor: s-resize !important; }
 .cursor-w-resize { cursor: w-resize !important; }
 .cursor-e-resize { cursor: e-resize !important; }
+
+/* Dropdown animation */
+@keyframes fade-in-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.2s ease-out;
+}

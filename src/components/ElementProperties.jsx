@@ -125,12 +125,93 @@ const ElementProperties = ({ selectedElement }) => {
   };
 
   // Only show the toolbar for text elements that are properly selected AND have text content
+  // Template elements get their own special properties panel
   if (!selectedElement || 
       selectedElement.tagName === 'IMG' || 
-      selectedElement.dataset?.type !== 'text' ||
+      (selectedElement.dataset?.type !== 'text' && !selectedElement.classList?.contains('template-element')) ||
       !selectedElement.isConnected ||
-      selectedElement.textContent.trim() === '' ||
-      selectedElement.textContent.trim() === 'Text must be present') {
+      (selectedElement.dataset?.type === 'text' && (selectedElement.textContent.trim() === '' || selectedElement.textContent.trim() === 'Text must be present'))) {
+    
+    // Show template-specific properties for template elements
+    if (selectedElement?.classList?.contains('template-element')) {
+      return (
+        <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+          <div className="max-w-full px-4 py-3">
+            <div className="flex items-center justify-center gap-3">
+              <h3 className="text-sm font-semibold text-gray-700">Template Properties</h3>
+              
+              {/* Opacity Slider */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Opacity:</span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.1"
+                  defaultValue="1"
+                  className="w-20"
+                  onChange={(e) => {
+                    if (selectedElement) {
+                      selectedElement.style.opacity = e.target.value;
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Z-Index Controls */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Layer:</span>
+                <button
+                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => {
+                    if (selectedElement) {
+                      selectedElement.style.zIndex = '999';
+                    }
+                  }}
+                >
+                  Front
+                </button>
+                <button
+                  className="px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600"
+                  onClick={() => {
+                    if (selectedElement) {
+                      selectedElement.style.zIndex = '1';
+                    }
+                  }}
+                >
+                  Back
+                </button>
+              </div>
+
+              {/* Replace Template Button */}
+              <button
+                className="px-3 py-1 text-xs bg-green-500 text-white rounded hover:bg-green-600"
+                onClick={() => {
+                  if (selectedElement && window.templateManager) {
+                    window.templateManager.replaceTemplateBackground(selectedElement);
+                  }
+                }}
+              >
+                Replace Template
+              </button>
+
+              {/* Delete Template Button */}
+              <button
+                className="px-3 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={() => {
+                  if (selectedElement && window.templateManager) {
+                    window.templateManager.removeTemplateElement(selectedElement);
+                  }
+                }}
+              >
+                <FaTrash className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
     return null;
   }
 
