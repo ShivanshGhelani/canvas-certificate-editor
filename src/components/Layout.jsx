@@ -134,6 +134,38 @@ const Layout = () => {
   };
 
   const createTemplateElement = (elementData) => {
+    // Use the universal element creator if available for full functionality
+    if (window.universalElementCreator) {
+      const element = window.universalElementCreator.createElement({
+        type: 'text',
+        content: elementData.content,
+        customStyles: {
+          width: 200,
+          height: 50
+        }
+      });
+      
+      // Apply template-specific positioning and styling
+      element.style.left = `${elementData.x}px`;
+      element.style.top = `${elementData.y}px`;
+      element.className = 'template-element dynamic-element universal-element';
+      element.dataset.templateId = elementData.id;
+      
+      // Apply template-specific text styling to the inner text element
+      const textElement = element.querySelector('div[contenteditable]') || element.querySelector('div');
+      if (textElement) {
+        textElement.style.fontSize = `${elementData.fontSize}px`;
+        textElement.style.fontFamily = `'${elementData.fontFamily}', serif`;
+        textElement.style.fontWeight = elementData.fontWeight || 'normal';
+        textElement.style.color = elementData.color;
+        textElement.style.textAlign = elementData.textAlign || 'center';
+        textElement.textContent = elementData.content;
+      }
+      
+      return element;
+    }
+    
+    // Fallback to original implementation if universal creator not available
     const element = document.createElement('div');
     element.className = 'template-element dynamic-element';
     element.dataset.type = elementData.type;

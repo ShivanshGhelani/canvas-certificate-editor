@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  FaFileExport, FaFilePdf, FaFileImage, FaFont, FaImage, FaSignature, FaPalette, FaMagic, FaChevronDown, FaCertificate, FaUpload, FaTrash, FaThLarge 
+  FaFileExport, FaFilePdf, FaFileImage, FaFont, FaImage, FaSignature, FaPalette, FaMagic, FaChevronDown, FaCertificate, FaUpload, FaTrash, FaThLarge, FaFileCode 
 } from 'react-icons/fa';
 
 const TopBar = ({ onAddText, onTemplateReset }) => {
@@ -407,6 +407,126 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
     setShowExportMenu(false);
   };
 
+  const downloadHTML = async () => {
+    const certificateWrapper = document.getElementById('certificate-wrapper');
+    const backgroundCanvas = document.getElementById('background-canvas');
+    if (!certificateWrapper) return;
+    
+    // Convert background canvas to base64 if it exists
+    let backgroundDataURL = '';
+    if (backgroundCanvas) {
+      try {
+        backgroundDataURL = backgroundCanvas.toDataURL('image/png');
+      } catch (e) {
+        console.warn('Could not capture background canvas:', e);
+      }
+    }
+    
+    // Get computed styles for the certificate wrapper
+    const computedStyles = window.getComputedStyle(certificateWrapper);
+    const wrapperStyles = Array.from(computedStyles).reduce((acc, property) => {
+      acc[property] = computedStyles.getPropertyValue(property);
+      return acc;
+    }, {});
+    
+    // Create inline styles string
+    const inlineStyles = Object.entries(wrapperStyles)
+      .map(([property, value]) => `${property}: ${value}`)
+      .join('; ');
+    
+    // Clone the certificate content
+    const clonedContent = certificateWrapper.cloneNode(true);
+    
+    // Create a complete HTML document with proper styling
+    const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .certificate-display {
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            width: fit-content;
+            height: fit-content;
+        }
+        
+        .certificate-wrapper {
+            ${inlineStyles};
+            position: relative;
+            background-image: url('${backgroundDataURL}');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .dynamic-element {
+            position: absolute;
+            font-family: inherit;
+            z-index: 10;
+        }
+        
+        .template-element {
+            position: absolute;
+            font-family: inherit;
+            z-index: 10;
+        }
+        
+        /* Remove interactive elements from export */
+        .resize-handle,
+        .remove-btn,
+        .delete-btn {
+            display: none !important;
+        }
+        
+        /* Preserve text styling */
+        span, div {
+            color: inherit;
+            font-size: inherit;
+            font-family: inherit;
+            font-weight: inherit;
+            text-align: inherit;
+        }
+    </style>
+</head>
+<body>
+    <div class="certificate-display">
+        ${clonedContent.outerHTML}
+    </div>
+</body>
+</html>`;
+
+    // Create and download the HTML file
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'certificate.html';
+    link.click();
+    URL.revokeObjectURL(link.href);
+    setShowExportMenu(false);
+  };
+
   // Element actions
   const triggerAddText = () => {
     if (onAddText) {
@@ -749,17 +869,17 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
             </button>
             <button
               className="w-full px-4 py-3 text-sm text-gray-700 flex items-center gap-3 hover:bg-gray-100"
-              onClick={downloadJPG}
-            >
-              <FaFileImage className="text-green-500" />
-              <span>Download JPG</span>
-            </button>
-            <button
-              className="w-full px-4 py-3 text-sm text-gray-700 flex items-center gap-3 hover:bg-gray-100"
               onClick={downloadPDF}
             >
               <FaFilePdf className="text-red-500" />
               <span>Download PDF</span>
+            </button>
+            <button
+              className="w-full px-4 py-3 text-sm text-gray-700 flex items-center gap-3 hover:bg-gray-100"
+              onClick={downloadHTML}
+            >
+              <FaFileCode className="text-orange-500" />
+              <span>Download HTML</span>
             </button>
           </div>
           )}
