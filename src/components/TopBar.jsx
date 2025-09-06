@@ -6,6 +6,348 @@ import {
 const TopBar = ({ onAddText, onTemplateReset }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showBackgroundMenu, setShowBackgroundMenu] = useState(false);
+  const [showBackgroundTemplates, setShowBackgroundTemplates] = useState(false);
+
+  // Background templates organized by category
+  const backgroundTemplates = {
+    seminar: [
+      '/backgrounds/templates/converted-Gemini_Generated_Image_1f94nb1f94nb1f94.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_24edfy24edfy24ed.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_bephe7bephe7beph.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_br24fkbr24fkbr24.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_btrebtrebtrebtre.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_j2un03j2un03j2un.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_t6y38t6y38t6y38t.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_x7hbmlx7hbmlx7hb.png'
+    ],
+    sports: [
+      '/backgrounds/templates/converted-Gemini_Generated_Image_3v1wh23v1wh23v1w.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo (5).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo (6).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo (7).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_ukqyhkukqyhkukqy.png'
+    ],
+    techEvent: [
+      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (1).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (2).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (3).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (4).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_e6ubske6ubske6ub (1).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_i2haipi2haipi2ha.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_tj0908tj0908tj09.png'
+    ],
+    workshop: [
+      '/backgrounds/templates/converted-Gemini_Generated_Image_3cpza53cpza53cpz.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_3cpza53cpza53cpz (2).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_st1h5rst1h5rst1h.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_st1h5rst1h5rst1h (1).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_st1h5rst1h5rst1h (3).png'
+    ],
+    nonTechEvent: [
+      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk (1).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk (2).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk (3).png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_cq0h6dcq0h6dcq0h.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_iroe7wiroe7wiroe.png',
+      '/backgrounds/templates/converted-Gemini_Generated_Image_ti32p2ti32p2ti32.png'
+    ]
+  };
+
+  // Certificate templates with text elements
+  const certificateTemplates = [
+    {
+      id: 'academic-achievement',
+      name: 'Academic Achievement',
+      description: 'Classic academic certificate design',
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Certificate of Achievement',
+          x: 400,
+          y: 150,
+          fontSize: 36,
+          fontWeight: 'bold',
+          fontFamily: 'Cinzel',
+          color: '#2c3e50',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'This is to certify that',
+          x: 400,
+          y: 220,
+          fontSize: 18,
+          fontFamily: 'Lora',
+          color: '#34495e',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Student Name',
+          x: 400,
+          y: 280,
+          fontSize: 32,
+          fontWeight: 'bold',
+          fontFamily: 'Playfair Display',
+          color: '#2a6df4',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'has successfully completed the requirements and is awarded this certificate',
+          x: 400,
+          y: 350,
+          fontSize: 16,
+          fontFamily: 'Lora',
+          color: '#34495e',
+          textAlign: 'center'
+        },
+        {
+          id: 'course',
+          type: 'text',
+          content: 'Course/Program Name',
+          x: 400,
+          y: 420,
+          fontSize: 24,
+          fontWeight: 'bold',
+          fontFamily: 'Montserrat',
+          color: '#2c3e50',
+          textAlign: 'center'
+        },
+        {
+          id: 'date',
+          type: 'text',
+          content: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          x: 200,
+          y: 520,
+          fontSize: 14,
+          fontFamily: 'Roboto',
+          color: '#34495e',
+          textAlign: 'left'
+        }
+      ]
+    },
+    {
+      id: 'professional-award',
+      name: 'Professional Award',
+      description: 'Modern professional certificate',
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Professional Excellence Award',
+          x: 400,
+          y: 140,
+          fontSize: 40,
+          fontWeight: 'bold',
+          fontFamily: 'Montserrat',
+          color: '#1a237e',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'Presented to',
+          x: 400,
+          y: 200,
+          fontSize: 20,
+          fontFamily: 'Lato',
+          color: '#424242',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Employee Name',
+          x: 400,
+          y: 260,
+          fontSize: 36,
+          fontWeight: 'bold',
+          fontFamily: 'Raleway',
+          color: '#e91e63',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'For outstanding performance and dedication to excellence',
+          x: 400,
+          y: 330,
+          fontSize: 18,
+          fontFamily: 'Open Sans',
+          color: '#424242',
+          textAlign: 'center'
+        },
+        {
+          id: 'department',
+          type: 'text',
+          content: 'Department/Division',
+          x: 400,
+          y: 390,
+          fontSize: 20,
+          fontWeight: '600',
+          fontFamily: 'Poppins',
+          color: '#1a237e',
+          textAlign: 'center'
+        }
+      ]
+    },
+    {
+      id: 'course-completion',
+      name: 'Course Completion',
+      description: 'Training course certificate',
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Certificate of Completion',
+          x: 400,
+          y: 160,
+          fontSize: 38,
+          fontWeight: 'bold',
+          fontFamily: 'Cormorant Garamond',
+          color: '#2e7d32',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'This certifies that',
+          x: 400,
+          y: 220,
+          fontSize: 16,
+          fontFamily: 'Libre Baskerville',
+          color: '#37474f',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Participant Name',
+          x: 400,
+          y: 280,
+          fontSize: 30,
+          fontWeight: 'bold',
+          fontFamily: 'Dancing Script',
+          color: '#d32f2f',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'has successfully completed the training program',
+          x: 400,
+          y: 340,
+          fontSize: 16,
+          fontFamily: 'Merriweather',
+          color: '#37474f',
+          textAlign: 'center'
+        },
+        {
+          id: 'course',
+          type: 'text',
+          content: 'Course Title',
+          x: 400,
+          y: 400,
+          fontSize: 22,
+          fontWeight: 'bold',
+          fontFamily: 'Oswald',
+          color: '#2e7d32',
+          textAlign: 'center'
+        },
+        {
+          id: 'duration',
+          type: 'text',
+          content: 'Duration: 40 Hours',
+          x: 400,
+          y: 450,
+          fontSize: 14,
+          fontFamily: 'Roboto',
+          color: '#546e7a',
+          textAlign: 'center'
+        }
+      ]
+    },
+    {
+      id: 'appreciation',
+      name: 'Appreciation Certificate',
+      description: 'Certificate of appreciation',
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Certificate of Appreciation',
+          x: 400,
+          y: 150,
+          fontSize: 36,
+          fontWeight: 'bold',
+          fontFamily: 'Great Vibes',
+          color: '#8e24aa',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'Gratefully presented to',
+          x: 400,
+          y: 210,
+          fontSize: 18,
+          fontFamily: 'Parisienne',
+          color: '#4a148c',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Honoree Name',
+          x: 400,
+          y: 270,
+          fontSize: 34,
+          fontWeight: 'bold',
+          fontFamily: 'Allura',
+          color: '#d32f2f',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'In recognition of outstanding service and valuable contributions',
+          x: 400,
+          y: 340,
+          fontSize: 16,
+          fontFamily: 'Lora',
+          color: '#424242',
+          textAlign: 'center'
+        },
+        {
+          id: 'organization',
+          type: 'text',
+          content: 'Organization Name',
+          x: 400,
+          y: 400,
+          fontSize: 20,
+          fontWeight: '600',
+          fontFamily: 'Cinzel',
+          color: '#8e24aa',
+          textAlign: 'center'
+        }
+      ]
+    }
+  ];
+
+  const categoryNames = {
+    seminar: 'Seminar',
+    sports: 'Sports',
+    techEvent: 'Tech Event',
+    workshop: 'Workshop',
+    nonTechEvent: 'Non-Tech Event'
+  };
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -13,6 +355,7 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
       if (!event.target.closest('.relative')) {
         setShowExportMenu(false);
         setShowBackgroundMenu(false);
+        setShowBackgroundTemplates(false);
       }
     };
 
@@ -174,15 +517,64 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
   };
 
   const triggerBackgroundUpload = () => {
-    if (window.triggerBackgroundUpload) {
-      window.triggerBackgroundUpload();
-    }
+    // Create file input for background upload
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.style.display = 'none';
+    
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const imageSrc = e.target.result;
+          // Use the global setBackgroundImage function from Canvas.jsx
+          if (window.setBackgroundImage) {
+            window.setBackgroundImage(imageSrc);
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    
+    // Trigger file selection
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
   };
 
   const resetBackground = () => {
+    // Use the global resetBackground function from Canvas.jsx
     if (window.resetBackground) {
       window.resetBackground();
+    } else if (window.drawBackground && typeof window.drawBackground === 'function') {
+      // Fallback to ornate background
+      window.drawBackground();
     }
+  };
+
+  const loadBackgroundTemplate = (templatePath) => {
+    // Use the global setBackgroundImage function from Canvas.jsx
+    if (window.setBackgroundImage) {
+      window.setBackgroundImage(templatePath);
+    }
+    
+    // Automatically load a default certificate template with the background
+    const defaultTemplate = certificateTemplates[0]; // Use Academic Achievement template
+    const event = new CustomEvent('loadTemplate', { detail: defaultTemplate });
+    window.dispatchEvent(event);
+    
+    setShowBackgroundTemplates(false);
+    setShowBackgroundMenu(false);
+  };
+
+  const loadCertificateTemplate = (template) => {
+    // Use the Layout component's template loading function
+    const event = new CustomEvent('loadTemplate', { detail: template });
+    window.dispatchEvent(event);
+    setShowBackgroundTemplates(false);
+    setShowBackgroundMenu(false);
   };
 
   return (
@@ -206,19 +598,9 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
 
         <button 
           className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
-          onClick={openTemplateSelector}
-        >
-          <FaThLarge />
-          <span>Templates</span>
-        </button>
-
-        <button 
-          className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
           onClick={() => {
             if (onTemplateReset) onTemplateReset();
-            if (window.templateManager?.resetBackground) {
-              window.templateManager.resetBackground();
-            }
+            resetBackground();
           }}
         >
           <FaTrash />
@@ -239,7 +621,7 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
             onClick={() => setShowBackgroundMenu(!showBackgroundMenu)}
           >
             <FaPalette />
-            <span>Background</span>
+            <span>Background Template</span>
             <FaChevronDown className={`transition-transform duration-200 ${showBackgroundMenu ? 'rotate-180' : ''}`} />
           </button>
 
@@ -248,13 +630,42 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
               <button
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 first:rounded-t-lg"
                 onClick={() => {
-                  openTemplateSelector();
-                  setShowBackgroundMenu(false);
+                  setShowBackgroundTemplates(!showBackgroundTemplates);
                 }}
               >
                 <FaThLarge className="text-purple-600" />
-                <span>Choose Template</span>
+                <span>Choose Background Template</span>
+                <FaChevronDown className={`ml-auto transition-transform duration-200 ${showBackgroundTemplates ? 'rotate-180' : ''}`} />
               </button>
+              
+              {showBackgroundTemplates && (
+                <div className="border-t border-gray-100 max-h-80 overflow-y-auto">
+                  {/* Background Image Templates Section */}
+                  {Object.entries(backgroundTemplates).map(([category, templates]) => (
+                    <div key={category} className="p-2">
+                      <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2 px-2">
+                        {categoryNames[category]} Backgrounds
+                      </h4>
+                      <div className="grid grid-cols-3 gap-2">
+                        {templates.map((template, index) => (
+                          <button
+                            key={index}
+                            className="relative aspect-square rounded overflow-hidden border border-gray-200 hover:border-blue-500 transition-colors"
+                            onClick={() => loadBackgroundTemplate(template)}
+                          >
+                            <img
+                              src={template}
+                              alt={`${categoryNames[category]} template ${index + 1}`}
+                              className="w-full h-full object-cover hover:scale-110 transition-transform"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
               <button
                 className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2 border-t border-gray-100"
                 onClick={() => {

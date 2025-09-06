@@ -17,21 +17,24 @@ const Layout = () => {
   };
 
   const handleTemplateLoad = (template) => {
+    console.log('Template load started:', template);
+    console.log('Template elements:', template.elements);
     setCurrentTemplate(template);
     
-    // Add template-active class to wrapper for portrait orientation
-    const wrapper = document.getElementById('certificate-wrapper');
-    if (wrapper) {
-      wrapper.classList.add('template-active');
+    // Hide the default placeholder text when template is loaded
+    const placeholderText = document.getElementById('default-placeholder-text');
+    if (placeholderText) {
+      placeholderText.style.display = 'none';
     }
     
-    // Update canvas dimensions for template (landscape)
+    // NO dimension changes - keep A4 portrait dimensions
     const canvas = document.getElementById('background-canvas');
     if (canvas) {
-      canvas.width = 3508;  // Landscape width (A4 landscape at 300 DPI)
-      canvas.height = 2480; // Landscape height (A4 landscape at 300 DPI)
+      // Keep the existing A4 portrait dimensions (2480×3508px at 300 DPI)
+      canvas.width = 2480;  // Portrait width 
+      canvas.height = 3508; // Portrait height
       
-      // Draw our ornate background instead of loading background images
+      // Draw our ornate background
       if (window.drawBackground && typeof window.drawBackground === 'function') {
         window.drawBackground();
       }
@@ -42,15 +45,19 @@ const Layout = () => {
     
     // Clear existing template elements
     const container = document.getElementById('dynamic-elements-container');
+    console.log('Container found:', !!container);
     if (container) {
       // Remove only template elements, keep regular elements
       const templateElements = container.querySelectorAll('.template-element');
       templateElements.forEach(el => el.remove());
       
       // Add new template elements
-      template.elements.forEach(elementData => {
+      console.log('Creating', template.elements.length, 'template elements');
+      template.elements.forEach((elementData, index) => {
+        console.log('Creating element', index, ':', elementData);
         const element = createTemplateElement(elementData);
         container.appendChild(element);
+        console.log('Element created and added:', element);
       });
     }
   };
@@ -84,6 +91,12 @@ const Layout = () => {
     if (container) {
       const templateElements = container.querySelectorAll('.template-element');
       templateElements.forEach(el => el.remove());
+    }
+
+    // Show placeholder text when template is reset
+    const placeholderText = document.getElementById('default-placeholder-text');
+    if (placeholderText) {
+      placeholderText.style.display = 'block';
     }
   };
 
@@ -286,13 +299,21 @@ const Layout = () => {
       setSelectedElement(null);
     };
 
+    const handleTemplateLoadEvent = (event) => {
+      if (event.detail) {
+        handleTemplateLoad(event.detail);
+      }
+    };
+
     // Listen on window for the events dispatched by element-selection.js
     window.addEventListener('elementSelected', handleElementSelection);
     window.addEventListener('elementDeselected', handleElementDeselection);
+    window.addEventListener('loadTemplate', handleTemplateLoadEvent);
 
     return () => {
       window.removeEventListener('elementSelected', handleElementSelection);
       window.removeEventListener('elementDeselected', handleElementDeselection);
+      window.removeEventListener('loadTemplate', handleTemplateLoadEvent);
     };
   }, []);
 

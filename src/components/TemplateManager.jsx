@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FaCertificate, FaAward, FaGraduationCap, FaTrophy } from 'react-icons/fa';
 
 const TemplateManager = ({ onTemplateLoad }) => {
+  console.log('TemplateManager rendered with onTemplateLoad:', !!onTemplateLoad);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
 
   const templates = [
@@ -294,6 +295,7 @@ const TemplateManager = ({ onTemplateLoad }) => {
   ];
 
   const loadTemplate = (template) => {
+    console.log('Loading template:', template.name);
     setSelectedTemplate(template);
     if (onTemplateLoad) {
       onTemplateLoad(template);
@@ -305,6 +307,8 @@ const TemplateManager = ({ onTemplateLoad }) => {
     });
     window.dispatchEvent(event);
   };
+
+  console.log('Rendering', templates.length, 'templates');
 
   return (
     <div className="p-4">

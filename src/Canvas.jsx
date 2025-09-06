@@ -1662,7 +1662,7 @@ const Canvas = ({ onTextElementsChange, template }) => {
 
           <div className="certificate-content">
             {/* Default state message - only visible when no template is active */}
-            <div className="default-message" style={{
+            <div id="default-placeholder-text" className="default-message" style={{
               position: 'absolute',
               top: '50%',
               left: '50%',
