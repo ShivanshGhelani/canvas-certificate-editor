@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { createSimpleTextElement, makeTextElementInteractive } from './components/SimpleTextElement';
 
-const Canvas = ({ onTextElementsChange }) => {
+const Canvas = ({ onTextElementsChange, template }) => {
   // Load enhanced background removal if available
   useEffect(() => {
     const script = document.createElement('script');
@@ -107,6 +107,8 @@ const Canvas = ({ onTextElementsChange }) => {
     window.selectElement = selectElement;
     window.makeElementDraggable = makeElementDraggable;
     window.showDeleteButton = showDeleteButton;
+    window.showTemplateDeleteButton = showTemplateDeleteButton;
+    window.deselectAll = deselectAll;
     window.createSimpleSignatureElement = createSimpleSignatureElement;
     window.triggerAddSignature = triggerAddSignature;
     window.triggerBackgroundUpload = triggerBackgroundUpload;
@@ -452,23 +454,34 @@ const Canvas = ({ onTextElementsChange }) => {
         !e.target.closest('.delete-btn') && 
         !e.target.closest('.resize-handle')) {
       
-      document.querySelectorAll('.dynamic-element').forEach(el => {
+      deselectAll();
+    }
+  };
+
+  const deselectAll = () => {
+    document.querySelectorAll('.dynamic-element').forEach(el => {
+      if (el.classList.contains('template-element')) {
         el.style.border = '2px solid transparent';
-        el.classList.remove('selected');
-        // Hide resize handles
-        el.querySelectorAll('.resize-handle').forEach(handle => {
-          handle.style.display = 'none';
-        });
-        // Blur text elements to exit edit mode
-        if (el.dataset.type === 'text') {
-          el.blur();
-        }
+        el.style.backgroundColor = 'transparent';
+      } else {
+        el.style.border = '2px solid transparent';
+      }
+      el.classList.remove('selected');
+      
+      // Hide resize handles
+      el.querySelectorAll('.resize-handle').forEach(handle => {
+        handle.style.display = 'none';
       });
       
-      // Remove delete buttons
-      document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
-      window.selectedElement = null;
-    }
+      // Blur text elements to exit edit mode
+      if (el.dataset.type === 'text') {
+        el.blur();
+      }
+    });
+    
+    // Remove delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+    window.selectedElement = null;
   };
 
   // Element creation functions
@@ -783,6 +796,7 @@ const Canvas = ({ onTextElementsChange }) => {
     // Select current element with appropriate styling
     if (element.classList.contains('template-element')) {
       element.style.border = '2px solid #3b82f6';
+      element.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
     } else {
       element.style.border = '2px solid #3b82f6';
     }
@@ -798,7 +812,7 @@ const Canvas = ({ onTextElementsChange }) => {
     
     // Handle resize handles - template elements don't need them
     if (!element.classList.contains('template-element')) {
-      // Force recreate and show resize handles for regular elements
+      // Force recreate and show resize handles for regular elements only
       setTimeout(() => {
         // Remove existing handles first
         element.querySelectorAll('.resize-handle').forEach(handle => handle.remove());
@@ -817,10 +831,13 @@ const Canvas = ({ onTextElementsChange }) => {
           handle.style.opacity = '1';
         });
       }, 50);
+      
+      // Show delete button for regular elements
+      showDeleteButton(element);
+    } else {
+      // Template elements get a special delete behavior (just clear text or reset to default)
+      showTemplateDeleteButton(element);
     }
-    
-    // Show delete button (template elements get a special delete behavior)
-    showDeleteButton(element);
   };
 
   const showDeleteButton = (element) => {
@@ -896,6 +913,74 @@ const Canvas = ({ onTextElementsChange }) => {
     });
     
     element.appendChild(deleteBtn);
+  };
+
+  const showTemplateDeleteButton = (element) => {
+    // Remove existing delete button first
+    const existingBtn = element.querySelector('.delete-btn');
+    if (existingBtn) existingBtn.remove();
+    
+    // Also remove any global delete buttons
+    document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+    
+    // Create reset button for template elements
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'delete-btn';
+    resetBtn.innerHTML = '↺';
+    resetBtn.title = 'Reset to default text';
+    resetBtn.style.cssText = `
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #ffc107;
+      color: #212529;
+      border: 2px solid white;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      z-index: 1003;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: all 0.2s ease;
+      pointer-events: auto;
+    `;
+    
+    // Add click handler for reset
+    resetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      // Get original template data and reset text
+      const templateId = element.dataset.templateId;
+      if (templateId) {
+        // You can store original template data and reset here
+        // For now, just clear the text
+        if (confirm('Reset this text to its default value?')) {
+          // This would ideally restore from template data
+          element.textContent = 'Default Text';
+        }
+      }
+    });
+    
+    // Add hover effects
+    resetBtn.addEventListener('mouseenter', () => {
+      resetBtn.style.background = '#e0a800';
+      resetBtn.style.transform = 'scale(1.15)';
+      resetBtn.style.boxShadow = '0 4px 12px rgba(255, 193, 7, 0.4)';
+    });
+    
+    resetBtn.addEventListener('mouseleave', () => {
+      resetBtn.style.background = '#ffc107';
+      resetBtn.style.transform = 'scale(1)';
+      resetBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+    });
+    
+    element.appendChild(resetBtn);
   };
 
   const makeElementDraggable = (element) => {
@@ -1213,12 +1298,18 @@ const Canvas = ({ onTextElementsChange }) => {
         /* --- ESSENTIAL STRUCTURE --- */
         .certificate-wrapper {
             position: relative;
-            width: 210mm;
-            height: 297mm;
+            width: 744px;   /* A4 portrait scaled for display (2480 * 0.3) */
+            height: 1052px; /* A4 portrait scaled for display (3508 * 0.3) */
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             background-color: var(--modern-bg);
             overflow: hidden;
             margin: 0 auto;
+        }
+
+        /* Template-specific landscape orientation */
+        .certificate-wrapper.template-active {
+            width: 1052px;  /* Landscape width for templates (3508 * 0.3) */
+            height: 744px;  /* Landscape height for templates (2480 * 0.3) */
         }
 
         #background-canvas {
@@ -1402,7 +1493,7 @@ const Canvas = ({ onTextElementsChange }) => {
         }
         
         /* Delete button styles - positioned clearly above border */
-        .delete-btn {
+        .delete-btn, .remove-btn {
             position: absolute;
             top: -15px;
             right: -15px;
@@ -1423,7 +1514,7 @@ const Canvas = ({ onTextElementsChange }) => {
             transition: all 0.2s ease;
             line-height: 1;
         }
-        .delete-btn:hover {
+        .delete-btn:hover, .remove-btn:hover {
             background: #c82333 !important;
             transform: scale(1.1) !important;
             box-shadow: 0 5px 15px rgba(220, 53, 69, 0.5) !important;
@@ -1441,6 +1532,16 @@ const Canvas = ({ onTextElementsChange }) => {
             margin-top: auto;
             position: relative;
             min-height: 120px;
+            /* Show by default for A4 landscape */
+            opacity: 1;
+            visibility: visible;
+            transition: all 0.3s ease;
+        }
+
+        /* Keep footer visible when template is active */
+        .certificate-wrapper.template-active .footer-content {
+            opacity: 1;
+            visibility: visible;
         }
 
         .signature-block {
@@ -1448,6 +1549,21 @@ const Canvas = ({ onTextElementsChange }) => {
             width: 250px;
             position: relative;
             transition: all 0.3s ease;
+            /* Show by default for A4 landscape */
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Keep signature blocks visible when template is active */
+        .certificate-wrapper.template-active .signature-block {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Hide default message when template is active */
+        .certificate-wrapper.template-active .default-message {
+            opacity: 0 !important;
+            visibility: hidden !important;
         }
 
         /* Template-based absolute positioning for signature blocks */
@@ -1458,39 +1574,35 @@ const Canvas = ({ onTextElementsChange }) => {
             max-width: 220px;
         }
 
-        /* Template element styles */
+        /* Template element styles - non-draggable but editable */
         .template-element {
-            border: 2px dashed transparent !important;
+            border: 2px solid transparent !important;
             transition: all 0.3s ease;
             background-color: transparent !important;
+            cursor: text !important;
+            pointer-events: all !important;
         }
 
         .template-element:hover:not(.selected) {
-            border: 2px dashed rgba(0, 123, 255, 0.5) !important;
+            border: 2px dashed rgba(59, 130, 246, 0.5) !important;
+            background-color: rgba(59, 130, 246, 0.05) !important;
         }
 
         .template-element.selected {
-            border: 2px solid #007bff !important;
+            border: 2px solid #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.1) !important;
             outline: none !important;
         }
 
-        .template-element .template-info-overlay {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-            z-index: 2;
+        .template-element:focus {
+            border: 2px solid #3b82f6 !important;
+            background-color: rgba(59, 130, 246, 0.1) !important;
+            outline: none !important;
         }
 
-        .template-element:hover .template-info-overlay {
-            opacity: 1;
+        /* Template elements should not have resize handles */
+        .template-element .resize-handle {
+            display: none !important;
         }
 
         .signature-line {
@@ -1549,21 +1661,45 @@ const Canvas = ({ onTextElementsChange }) => {
           </div>
 
           <div className="certificate-content">
+            {/* Default state message - only visible when no template is active */}
+            <div className="default-message" style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              textAlign: 'center',
+              color: '#9ca3af',
+              fontSize: '16px',
+              fontFamily: 'Roboto, sans-serif',
+              opacity: '1',
+              visibility: 'visible',
+              transition: 'all 0.3s ease',
+              pointerEvents: 'none',
+              zIndex: '5'
+            }}>
+              <div style={{ marginBottom: '8px', fontSize: '18px', fontWeight: '500' }}>
+                Certificate Editor
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                Select a template or add elements to get started
+              </div>
+            </div>
+            
             <footer className="footer-content">
               <div className="signature-block">
                 <label htmlFor="upload-sig-1" className="signature-line" id="sig-line-1"></label>
-                <p className="name" contentEditable="true" suppressContentEditableWarning={true}>{'{{ Organizer\'s Name }}'}</p>
-                <p className="title" contentEditable="true" suppressContentEditableWarning={true}>Organizer</p>
+                <p className="name" contentEditable="true" suppressContentEditableWarning={true}></p>
+                <p className="title" contentEditable="true" suppressContentEditableWarning={true}></p>
               </div>
               <div className="signature-block">
                 <label htmlFor="upload-sig-2" className="signature-line" id="sig-line-2"></label>
-                <p className="name" contentEditable="true" suppressContentEditableWarning={true}>{'{{ HOD\'s Name }}'}</p>
-                <p className="title" contentEditable="true" suppressContentEditableWarning={true}>Head of Department</p>
+                <p className="name" contentEditable="true" suppressContentEditableWarning={true}></p>
+                <p className="title" contentEditable="true" suppressContentEditableWarning={true}></p>
               </div>
               <div className="signature-block">
                 <label htmlFor="upload-sig-3" className="signature-line" id="sig-line-3"></label>
-                <p className="name" contentEditable="true" suppressContentEditableWarning={true}>{'{{ Principal\'s Name }}'}</p>
-                <p className="title" contentEditable="true" suppressContentEditableWarning={true}>Principal</p>
+                <p className="name" contentEditable="true" suppressContentEditableWarning={true}></p>
+                <p className="title" contentEditable="true" suppressContentEditableWarning={true}></p>
               </div>
             </footer>
           </div>

@@ -30,18 +30,18 @@ async function downloadCertificatePDF() {
         const backgroundDataUrl = backgroundCanvas.toDataURL('image/jpeg', 0.9);
         const foregroundDataUrl = foregroundCanvas.toDataURL('image/png');
         
-        // Create PDF document (A4 landscape)
+        // Create PDF document (A4 portrait)
         const doc = new jsPDF({ 
-            orientation: 'landscape', 
+            orientation: 'portrait', 
             unit: 'mm', 
-            format: [297, 210] 
+            format: [210, 297] 
         });
         
         // Add background layer
-        doc.addImage(backgroundDataUrl, 'JPEG', 0, 0, 297, 210, undefined, 'FAST');
+        doc.addImage(backgroundDataUrl, 'JPEG', 0, 0, 210, 297, undefined, 'FAST');
         
         // Add foreground layer
-        doc.addImage(foregroundDataUrl, 'PNG', 0, 0, 297, 210, undefined, 'FAST');
+        doc.addImage(foregroundDataUrl, 'PNG', 0, 0, 210, 297, undefined, 'FAST');
         
         // Generate filename with timestamp
         const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');

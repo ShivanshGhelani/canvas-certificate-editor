@@ -41,12 +41,158 @@ function createDynamicElement(type, options = {}) {
 }
 
 function loadDefaultTemplate() {
-    createDynamicElement('text', { text: 'Certificate of', top: '150px', left: '371px', width: '380px', height: 'auto', fontFamily: 'Roboto', fontSize: '20px', color: 'var(--modern-blue)' });
-    createDynamicElement('text', { text: 'Participation', top: '180px', left: '321px', width: '480px', height: 'auto', fontFamily: 'Montserrat', fontSize: '56px', color: 'var(--modern-dark)', fontWeight: 'bold' });
-    createDynamicElement('text', { text: 'This certificate is hereby presented to', top: '300px', left: '271px', width: '580px', height: 'auto', fontFamily: 'Roboto', fontSize: '18px' });
-    createDynamicElement('text', { text: '{{ Recipient\'s Name }}', top: '350px', left: '271px', width: '580px', height: 'auto', fontFamily: 'Montserrat', fontSize: '48px', color: 'var(--modern-dark)', fontWeight: 'bold' });
-    createDynamicElement('text', { text: 'in recognition of their valuable participation in the', top: '430px', left: '271px', width: '580px', height: 'auto', fontFamily: 'Roboto', fontSize: '18px' });
-    createDynamicElement('text', { text: 'Workshop or Event Name', top: '460px', left: '271px', width: '580px', height: 'auto', fontFamily: 'Roboto', fontSize: '22px', fontWeight: 'bold' });
-    createDynamicElement('text', { text: 'held on {{ Date of Event }}', top: '490px', left: '271px', width: '580px', height: 'auto', fontFamily: 'Roboto', fontSize: '18px' });
-    createDynamicElement('logo', { text: 'Logo', top: '50px', left: '50px', width: '100px', height: '100px' });
+    // Clear any existing elements first
+    const container = document.getElementById('dynamic-elements-container');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // The ornate background is now handled by core.js drawBackground function
+    // No need to call loadOrnateAcademicBackground here
+    
+    // Positions scaled for A4 portrait (2480×3508px at 300 DPI)
+    // Create Certificate of Achievement design optimized for portrait
+    
+    createDynamicElement('text', { 
+        text: 'CERTIFICATE', 
+        top: '600px',   
+        left: '240px',  
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Cinzel', 
+        fontSize: '120px', 
+        color: '#2c3e50', 
+        fontWeight: 'bold',
+        textAlign: 'center'
+    });
+    
+    createDynamicElement('text', { 
+        text: 'OF ACHIEVEMENT', 
+        top: '750px',   
+        left: '240px',
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Cinzel', 
+        fontSize: '80px', 
+        color: '#2c3e50', 
+        fontWeight: 'normal',
+        textAlign: 'center'
+    });
+    
+    createDynamicElement('text', { 
+        text: 'This is to certify that', 
+        top: '1200px',  
+        left: '240px',  
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Lora', 
+        fontSize: '50px',
+        color: '#34495e',
+        textAlign: 'center'
+    });
+    
+    createDynamicElement('text', { 
+        text: "{{ Recipient's Name }}", 
+        top: '1400px',  
+        left: '240px',  
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Playfair Display', 
+        fontSize: '140px', 
+        color: '#2a6df4', 
+        fontWeight: 'bold',
+        textAlign: 'center'
+    });
+    
+    createDynamicElement('text', { 
+        text: 'has successfully completed the requirements for', 
+        top: '1650px',  
+        left: '240px',  
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Lora', 
+        fontSize: '45px',
+        color: '#34495e',
+        textAlign: 'center'
+    });
+    
+    createDynamicElement('text', { 
+        text: 'Course/Program Name', 
+        top: '1800px',  
+        left: '240px',  
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Cinzel', 
+        fontSize: '60px', 
+        color: '#2c3e50',
+        fontWeight: 'bold',
+        textAlign: 'center'
+    });
+    
+    createDynamicElement('text', { 
+        text: 'Awarded on {{ Date }}', 
+        top: '1980px',  
+        left: '240px',  
+        width: '2000px', 
+        height: 'auto', 
+        fontFamily: 'Lora', 
+        fontSize: '40px',
+        color: '#34495e',
+        textAlign: 'center'
+    });
+    
+    // Add decorative logo space
+    createDynamicElement('logo', { 
+        text: 'Logo', 
+        top: '900px',   
+        left: '1090px',  
+        width: '300px', 
+        height: '300px' 
+    });
+}
+
+// Function to load ornate academic background
+function loadOrnateAcademicBackground() {
+    const canvas = document.getElementById('background-canvas');
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Ornate golden border
+    ctx.strokeStyle = '#d4af37';
+    ctx.lineWidth = 20;
+    
+    // Outer border
+    ctx.strokeRect(100, 80, canvas.width - 200, canvas.height - 160);
+    
+    // Inner decorative border
+    ctx.strokeStyle = '#b8860b';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(140, 120, canvas.width - 280, canvas.height - 240);
+    
+    // Corner decorations
+    const cornerSize = 150;
+    ctx.fillStyle = '#d4af37';
+    
+    // Top corners
+    ctx.fillRect(80, 60, cornerSize, cornerSize);
+    ctx.fillRect(canvas.width - 230, 60, cornerSize, cornerSize);
+    
+    // Bottom corners  
+    ctx.fillRect(80, canvas.height - 210, cornerSize, cornerSize);
+    ctx.fillRect(canvas.width - 230, canvas.height - 210, cornerSize, cornerSize);
+    
+    // Clear corner centers
+    ctx.fillStyle = '#ffffff';
+    const centerSize = 100;
+    const centerOffset = 25;
+    
+    ctx.fillRect(80 + centerOffset, 60 + centerOffset, centerSize, centerSize);
+    ctx.fillRect(canvas.width - 230 + centerOffset, 60 + centerOffset, centerSize, centerSize);
+    ctx.fillRect(80 + centerOffset, canvas.height - 210 + centerOffset, centerSize, centerSize);
+    ctx.fillRect(canvas.width - 230 + centerOffset, canvas.height - 210 + centerOffset, centerSize, centerSize);
 }

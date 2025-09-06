@@ -3,7 +3,7 @@ import {
   FaFileExport, FaFilePdf, FaFileImage, FaFont, FaImage, FaSignature, FaPalette, FaMagic, FaChevronDown, FaCertificate, FaUpload, FaTrash, FaThLarge 
 } from 'react-icons/fa';
 
-const TopBar = ({ onAddText }) => {
+const TopBar = ({ onAddText, onTemplateReset }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showBackgroundMenu, setShowBackgroundMenu] = useState(false);
 
@@ -214,6 +214,19 @@ const TopBar = ({ onAddText }) => {
 
         <button 
           className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
+          onClick={() => {
+            if (onTemplateReset) onTemplateReset();
+            if (window.templateManager?.resetBackground) {
+              window.templateManager.resetBackground();
+            }
+          }}
+        >
+          <FaTrash />
+          <span>Reset</span>
+        </button>
+
+        <button 
+          className="px-3 py-2 rounded-md flex items-center gap-2 text-sm font-medium text-gray-700 hover:bg-gray-200 transition-colors"
           onClick={triggerAddLogo}
         >
           <FaImage />
@@ -293,15 +306,26 @@ const TopBar = ({ onAddText }) => {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="flex items-center gap-3">
+        {/* Cancel Button */}
         <button 
-          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition-colors"
-          onClick={() => setShowExportMenu(!showExportMenu)}
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-red-500 text-white rounded-md text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-2"
         >
-          <FaFileExport />
-          <span>Export</span>
-          <FaChevronDown className={`transition-transform duration-200 ${showExportMenu ? 'rotate-180' : ''}`} />
+          <span>×</span>
+          <span>Cancel</span>
         </button>
+        
+        {/* Export Button */}
+        <div className="relative">
+          <button 
+            className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-blue-700 transition-colors"
+            onClick={() => setShowExportMenu(!showExportMenu)}
+          >
+            <FaFileExport />
+            <span>Export</span>
+            <FaChevronDown className={`transition-transform duration-200 ${showExportMenu ? 'rotate-180' : ''}`} />
+          </button>
 
         {showExportMenu && (
           <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl min-w-48 z-50 animate-fade-in-down">
@@ -327,7 +351,8 @@ const TopBar = ({ onAddText }) => {
               <span>Download PDF</span>
             </button>
           </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Click outside to close dropdown */}
@@ -339,6 +364,4 @@ const TopBar = ({ onAddText }) => {
       )}
     </div>
   );
-};
-
-export default TopBar;
+};export default TopBar;
