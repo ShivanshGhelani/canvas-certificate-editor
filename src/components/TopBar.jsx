@@ -10,6 +10,22 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
 
   // Background templates organized by category
   const backgroundTemplates = {
+    landscape: [
+      '/backgrounds/templates/landscape/BlackGoldElegantSeminarCertificateLandscape (1).png',
+      '/backgrounds/templates/landscape/NavyTurqoiseModernTechnologyBusinessWebinarCertificate.png',
+      '/backgrounds/templates/landscape/SimpleWhiteNeumorphicAchievementCertificate.png',
+      '/backgrounds/templates/landscape/BlackandwhitesimplecertificateA4Landscape (1).png',
+      '/backgrounds/templates/landscape/BlackIllustrativeFunnyAwardCertificate (1).png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_1tnmtk1tnmtk1tnm (1).png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_5g23lc5g23lc5g23.png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_7y7s517y7s517y7s (1).png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_hk7r68hk7r68hk7r.png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_k5egwk5egwk5egwk (1).png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_oixnz9oixnz9oixn (1).png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_pxan4rpxan4rpxan.png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_u1klj6u1klj6u1kl.png',
+      '/backgrounds/templates/landscape/Gemini_Generated_Image_v3iqs5v3iqs5v3iq.png'
+    ],
     seminar: [
       '/backgrounds/templates/seminar-professional-navy.png',
       '/backgrounds/templates/seminar-corporate-gray.png',
@@ -342,6 +358,7 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
   ];
 
   const categoryNames = {
+    landscape: 'Landscape',
     seminar: 'Seminar',
     sports: 'Sports',
     techEvent: 'Tech Event',
