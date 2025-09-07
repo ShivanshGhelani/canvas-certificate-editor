@@ -14,7 +14,7 @@ A modern React application for creating and customizing professional certificate
 - **Logo Integration** - Upload and position logos with precise controls
 - **Element Properties** - Advanced styling with line height and letter spacing
 
-### 📄 **Export & Templates**
+### 📄 **Export & Templates**can you add these all landscape 
 - **High-Quality PDF Export** - Print-ready A4 landscape format using jsPDF
 - **Image Export** - PNG and JPG export with html2canvas
 - **Template System** - Pre-designed certificate layouts

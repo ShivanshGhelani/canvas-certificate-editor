@@ -11,6 +11,7 @@ const TemplateManager = ({ onTemplateLoad }) => {
       name: 'Academic Achievement',
       description: 'Classic academic certificate design',
       icon: FaGraduationCap,
+      orientation: 'portrait', // Define orientation for each template
       elements: [
         {
           id: 'title',
@@ -88,6 +89,7 @@ const TemplateManager = ({ onTemplateLoad }) => {
       name: 'Professional Award',
       description: 'Modern professional certificate',
       icon: FaAward,
+      orientation: 'portrait', // Portrait orientation
       elements: [
         {
           id: 'title',
@@ -154,6 +156,7 @@ const TemplateManager = ({ onTemplateLoad }) => {
       name: 'Course Completion',
       description: 'Training course certificate',
       icon: FaCertificate,
+      orientation: 'portrait', // Portrait orientation
       elements: [
         {
           id: 'title',
@@ -231,6 +234,7 @@ const TemplateManager = ({ onTemplateLoad }) => {
       name: 'Appreciation Certificate',
       description: 'Certificate of appreciation',
       icon: FaTrophy,
+      orientation: 'portrait', // Portrait orientation
       elements: [
         {
           id: 'title',
@@ -291,6 +295,241 @@ const TemplateManager = ({ onTemplateLoad }) => {
           textAlign: 'center'
         }
       ]
+    },
+    // Add new landscape templates
+    {
+      id: 'corporate-achievement-landscape',
+      name: 'Corporate Achievement (Landscape)',
+      description: 'Wide format corporate certificate',
+      icon: FaAward,
+      orientation: 'landscape', // Landscape orientation
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Certificate of Excellence',
+          x: 600,
+          y: 120,
+          fontSize: 42,
+          fontWeight: 'bold',
+          fontFamily: 'Montserrat',
+          color: '#1565c0',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'Proudly Presented to',
+          x: 600,
+          y: 200,
+          fontSize: 18,
+          fontFamily: 'Lato',
+          color: '#37474f',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Recipient Name',
+          x: 600,
+          y: 280,
+          fontSize: 38,
+          fontWeight: 'bold',
+          fontFamily: 'Playfair Display',
+          color: '#e65100',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'For outstanding leadership and exceptional contribution to corporate excellence',
+          x: 600,
+          y: 360,
+          fontSize: 16,
+          fontFamily: 'Open Sans',
+          color: '#424242',
+          textAlign: 'center'
+        },
+        {
+          id: 'company',
+          type: 'text',
+          content: 'Company Name',
+          x: 600,
+          y: 420,
+          fontSize: 22,
+          fontWeight: '600',
+          fontFamily: 'Roboto',
+          color: '#1565c0',
+          textAlign: 'center'
+        },
+        {
+          id: 'date',
+          type: 'text',
+          content: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+          x: 200,
+          y: 500,
+          fontSize: 14,
+          fontFamily: 'Roboto',
+          color: '#546e7a',
+          textAlign: 'left'
+        }
+      ]
+    },
+    {
+      id: 'training-completion-landscape',
+      name: 'Training Completion (Landscape)',
+      description: 'Wide format training certificate',
+      icon: FaGraduationCap,
+      orientation: 'landscape', // Landscape orientation
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Professional Training Certificate',
+          x: 600,
+          y: 100,
+          fontSize: 40,
+          fontWeight: 'bold',
+          fontFamily: 'Cinzel',
+          color: '#2e7d32',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'This certifies that',
+          x: 600,
+          y: 180,
+          fontSize: 18,
+          fontFamily: 'Lora',
+          color: '#424242',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Trainee Name',
+          x: 600,
+          y: 240,
+          fontSize: 36,
+          fontWeight: 'bold',
+          fontFamily: 'Raleway',
+          color: '#c62828',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'has successfully completed the comprehensive training program in',
+          x: 600,
+          y: 320,
+          fontSize: 16,
+          fontFamily: 'Merriweather',
+          color: '#37474f',
+          textAlign: 'center'
+        },
+        {
+          id: 'program',
+          type: 'text',
+          content: 'Training Program Name',
+          x: 600,
+          y: 380,
+          fontSize: 24,
+          fontWeight: 'bold',
+          fontFamily: 'Oswald',
+          color: '#2e7d32',
+          textAlign: 'center'
+        },
+        {
+          id: 'details',
+          type: 'text',
+          content: 'Duration: 80 Hours | Level: Advanced | Certification Date: ' + new Date().toLocaleDateString(),
+          x: 600,
+          y: 440,
+          fontSize: 14,
+          fontFamily: 'Roboto',
+          color: '#546e7a',
+          textAlign: 'center'
+        }
+      ]
+    },
+    {
+      id: 'recognition-landscape',
+      name: 'Recognition Award (Landscape)',
+      description: 'Wide format recognition certificate',
+      icon: FaTrophy,
+      orientation: 'landscape', // Landscape orientation
+      elements: [
+        {
+          id: 'title',
+          type: 'text',
+          content: 'Recognition Award',
+          x: 600,
+          y: 110,
+          fontSize: 44,
+          fontWeight: 'bold',
+          fontFamily: 'Great Vibes',
+          color: '#7b1fa2',
+          textAlign: 'center'
+        },
+        {
+          id: 'subtitle',
+          type: 'text',
+          content: 'In appreciation of',
+          x: 600,
+          y: 190,
+          fontSize: 20,
+          fontFamily: 'Parisienne',
+          color: '#4a148c',
+          textAlign: 'center'
+        },
+        {
+          id: 'recipient',
+          type: 'text',
+          content: 'Awardee Name',
+          x: 600,
+          y: 260,
+          fontSize: 40,
+          fontWeight: 'bold',
+          fontFamily: 'Allura',
+          color: '#d32f2f',
+          textAlign: 'center'
+        },
+        {
+          id: 'description',
+          type: 'text',
+          content: 'For exceptional dedication, outstanding performance, and significant contributions',
+          x: 600,
+          y: 340,
+          fontSize: 16,
+          fontFamily: 'Libre Baskerville',
+          color: '#424242',
+          textAlign: 'center'
+        },
+        {
+          id: 'organization',
+          type: 'text',
+          content: 'Organization/Institution Name',
+          x: 600,
+          y: 400,
+          fontSize: 20,
+          fontWeight: '600',
+          fontFamily: 'Montserrat',
+          color: '#7b1fa2',
+          textAlign: 'center'
+        },
+        {
+          id: 'signature-line',
+          type: 'text',
+          content: 'Authorized Signature',
+          x: 900,
+          y: 480,
+          fontSize: 12,
+          fontFamily: 'Roboto',
+          color: '#666666',
+          textAlign: 'center'
+        }
+      ]
     }
   ];
 
@@ -317,7 +556,10 @@ const TemplateManager = ({ onTemplateLoad }) => {
         Certificate Templates
       </h3>
       <p className="text-sm text-gray-600 mb-4">
-        Choose a template - all elements are editable, draggable, and deletable
+        Choose a template - all elements are editable, draggable, and deletable. 
+        <span className="block mt-1 text-blue-600 font-medium">
+          📐 Canvas automatically adjusts to template orientation (Portrait/Landscape)
+        </span>
       </p>
       
       <div className="grid grid-cols-1 gap-3">
@@ -345,8 +587,15 @@ const TemplateManager = ({ onTemplateLoad }) => {
                     {template.description}
                   </p>
                   <div className="mt-2">
-                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                    <span className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded mr-2">
                       {template.elements.length} elements
+                    </span>
+                    <span className={`inline-block text-xs px-2 py-1 rounded ${
+                      template.orientation === 'landscape' 
+                        ? 'bg-blue-100 text-blue-800' 
+                        : 'bg-purple-100 text-purple-800'
+                    }`}>
+                      {template.orientation === 'landscape' ? 'Landscape' : 'Portrait'}
                     </span>
                   </div>
                 </div>
@@ -360,9 +609,17 @@ const TemplateManager = ({ onTemplateLoad }) => {
         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-800">
             <strong>Template loaded:</strong> {selectedTemplate.name}
+            <span className="ml-2 px-2 py-1 bg-blue-200 text-blue-900 rounded text-xs">
+              {selectedTemplate.orientation === 'landscape' ? '📐 Landscape' : '📄 Portrait'}
+            </span>
           </p>
           <p className="text-xs text-blue-600 mt-1">
             Double-click any element to edit text. Drag to move. Click delete button (×) to remove elements.
+            {selectedTemplate.orientation === 'landscape' && (
+              <span className="block mt-1 font-medium">
+                ✨ Canvas automatically switched to landscape orientation!
+              </span>
+            )}
           </p>
         </div>
       )}

@@ -416,32 +416,45 @@ const Canvas = ({ onTextElementsChange, template }) => {
     await new Promise(r => setTimeout(r, 100));
 
     const certificateWrapper = document.getElementById('certificate-wrapper');
+    const canvas = document.getElementById('background-canvas');
     
     try {
-      const canvas = await html2canvas(certificateWrapper, { 
+      const canvasElement = await html2canvas(certificateWrapper, { 
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff'
       });
       
-      // Create PDF document (A4 portrait - 300 DPI)
+      // Determine orientation based on canvas dimensions
+      const isLandscape = canvas.width > canvas.height;
+      
+      // Create PDF document with appropriate orientation
       const doc = new jsPDF({ 
-        orientation: 'portrait', 
+        orientation: isLandscape ? 'landscape' : 'portrait', 
         unit: 'mm', 
-        format: [210, 297] 
+        format: isLandscape ? [297, 210] : [210, 297] // A4 dimensions
       });
       
-      const imgData = canvas.toDataURL('image/png');
-      doc.addImage(imgData, 'PNG', 0, 0, 210, 297);
+      const imgData = canvasElement.toDataURL('image/png');
       
-      // Generate filename with timestamp
+      // Add image to PDF with correct dimensions
+      if (isLandscape) {
+        doc.addImage(imgData, 'PNG', 0, 0, 297, 210); // A4 landscape
+      } else {
+        doc.addImage(imgData, 'PNG', 0, 0, 210, 297); // A4 portrait
+      }
+      
+      // Generate filename with timestamp and orientation
       const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-      const filename = `Certificate-${timestamp}.pdf`;
+      const orientation = isLandscape ? 'Landscape' : 'Portrait';
+      const filename = `Certificate-${orientation}-${timestamp}.pdf`;
       
       // Save the PDF
       doc.save(filename);
       
       console.log('PDF generated successfully:', filename);
+      console.log('Orientation:', orientation);
+      console.log('Canvas dimensions:', canvas.width, '×', canvas.height);
       
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -1304,10 +1317,16 @@ const Canvas = ({ onTextElementsChange, template }) => {
             background-color: var(--modern-bg);
             overflow: hidden;
             margin: 0 auto;
+            transition: all 0.3s ease;
         }
 
         /* Template-specific landscape orientation */
         .certificate-wrapper.template-active {
+            /* Determine orientation based on canvas dimensions via JavaScript */
+        }
+
+        /* Landscape orientation styles - applied when needed */
+        .certificate-wrapper.landscape-mode {
             width: 1052px;  /* Landscape width for templates (3508 * 0.3) */
             height: 744px;  /* Landscape height for templates (2480 * 0.3) */
         }

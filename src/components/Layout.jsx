@@ -19,6 +19,7 @@ const Layout = () => {
   const handleTemplateLoad = (template) => {
     console.log('Template load started:', template);
     console.log('Template elements:', template.elements);
+    console.log('Template orientation:', template.orientation);
     setCurrentTemplate(template);
     
     // Hide the default placeholder text when template is loaded
@@ -27,12 +28,42 @@ const Layout = () => {
       placeholderText.style.display = 'none';
     }
     
-    // NO dimension changes - keep A4 portrait dimensions
+    // Handle dimension changes based on template orientation
     const canvas = document.getElementById('background-canvas');
-    if (canvas) {
-      // Keep the existing A4 portrait dimensions (2480×3508px at 300 DPI)
-      canvas.width = 2480;  // Portrait width 
-      canvas.height = 3508; // Portrait height
+    const wrapper = document.getElementById('certificate-wrapper');
+    
+    if (canvas && wrapper) {
+      if (template.orientation === 'landscape') {
+        // Set A4 landscape dimensions (3508×2480px at 300 DPI)
+        canvas.width = 3508;  // Landscape width
+        canvas.height = 2480; // Landscape height
+        
+        // Add template-active class and set landscape mode
+        wrapper.classList.add('template-active', 'landscape-mode');
+        wrapper.classList.remove('portrait-mode');
+        
+        // Set landscape display dimensions (30% scale)
+        wrapper.style.width = '1052px';  // 3508 * 0.3
+        wrapper.style.height = '744px';  // 2480 * 0.3
+        
+        console.log('✅ Canvas set to landscape:', canvas.width, '×', canvas.height);
+        console.log('✅ Wrapper set to landscape display:', wrapper.style.width, '×', wrapper.style.height);
+      } else {
+        // Default portrait dimensions (2480×3508px at 300 DPI)
+        canvas.width = 2480;  // Portrait width 
+        canvas.height = 3508; // Portrait height
+        
+        // Add template-active class for portrait templates
+        wrapper.classList.add('template-active', 'portrait-mode');
+        wrapper.classList.remove('landscape-mode');
+        
+        // Set portrait display dimensions (30% scale)
+        wrapper.style.width = '744px';   // 2480 * 0.3
+        wrapper.style.height = '1052px'; // 3508 * 0.3
+        
+        console.log('✅ Canvas set to portrait:', canvas.width, '×', canvas.height);
+        console.log('✅ Wrapper set to portrait display:', wrapper.style.width, '×', wrapper.style.height);
+      }
       
       // Draw our ornate background
       if (window.drawBackground && typeof window.drawBackground === 'function') {
@@ -65,10 +96,14 @@ const Layout = () => {
   const handleTemplateReset = () => {
     setCurrentTemplate(null);
     
-    // Remove template-active class to return to landscape
+    // Remove template-active class to return to default state
     const wrapper = document.getElementById('certificate-wrapper');
     if (wrapper) {
-      wrapper.classList.remove('template-active');
+      wrapper.classList.remove('template-active', 'landscape-mode', 'portrait-mode');
+      
+      // Reset to default portrait dimensions for the default certificate
+      wrapper.style.width = '744px';   // Default portrait display (2480 * 0.3)
+      wrapper.style.height = '1052px'; // Default portrait display (3508 * 0.3)
     }
     
     // Restore canvas dimensions for default (portrait)
@@ -76,6 +111,8 @@ const Layout = () => {
     if (canvas) {
       canvas.width = 2480;  // Portrait width (A4 portrait at 300 DPI)
       canvas.height = 3508; // Portrait height (A4 portrait at 300 DPI)
+      
+      console.log('✅ Reset to default portrait:', canvas.width, '×', canvas.height);
       
       // Redraw default background
       if (window.drawBackground && typeof window.drawBackground === 'function') {
