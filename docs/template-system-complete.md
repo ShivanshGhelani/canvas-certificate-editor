@@ -6,47 +6,47 @@
 Your certificate editor now has **33 background templates** organized by event types:
 
 ### 📚 **Seminars** (8 templates)
-- Professional Seminar
-- Academic Seminar  
-- Modern Seminar
-- Business Seminar
-- Classic Seminar
-- Executive Seminar
-- Training Seminar
-- Workshop Seminar
+- Professional Navy (seminar-professional-navy.png)
+- Corporate Gray (seminar-corporate-gray.png)  
+- Elegant Gold (seminar-elegant-gold.png)
+- Formal Green (seminar-formal-green.png)
+- Luxury Black (seminar-luxury-black.png)
+- Modern White (seminar-modern-white.png)
+- Premium Purple (seminar-premium-purple.png)
+- Classic Blue (seminar-classic-blue.png)
 
 ### 🏆 **Sports** (6 templates)
-- Champion Sports
-- Athletic Excellence
-- Team Sports
-- Competition Sports
-- Sports Merit
-- Sports Achievement
+- Champion Gold (sports-champion-gold.png)
+- Achievement Red (sports-achievement-red.png)
+- Medal Silver (sports-medal-silver.png)
+- Victory Blue (sports-victory-blue.png)
+- Winner Green (sports-winner-green.png)
+- Competition Orange (sports-competition-orange.png)
 
 ### 💻 **Tech Events** (7 templates)
-- Innovation Tech
-- Digital Excellence
-- Coding Competition
-- Tech Conference
-- AI & ML Event
-- Cybersecurity Event
-- Hackathon
+- Innovation Blue (tech-innovation-blue.png)
+- Digital Excellence (tech-digital-excellence.png)
+- Coding Competition (tech-coding-competition.png)
+- Conference Modern (tech-conference-modern.png)
+- AI & ML Event (tech-ai-ml-event.png)
+- Cybersecurity Event (tech-cybersecurity-event.png)
+- Hackathon Event (tech-hackathon-event.png)
 
 ### 🛠️ **Workshops** (5 templates)
-- Skills Workshop
-- Creative Workshop
-- Professional Workshop
-- Technical Workshop
-- Leadership Workshop
+- Skills Development (workshop-skills-development.png)
+- Creative Arts (workshop-creative-arts.png)
+- Professional Training (workshop-professional-training.png)
+- Technical Skills (workshop-technical-skills.png)
+- Leadership Development (workshop-leadership-development.png)
 
 ### 🎭 **Non-Tech Events** (7 templates)
-- Cultural Event
-- Arts Festival
-- Community Event
-- Social Event
-- Volunteer Service
-- Literary Event
-- General Achievement
+- Cultural Celebration (event-cultural-celebration.png)
+- Arts Festival (event-arts-festival.png)
+- Community Service (event-community-service.png)
+- Social Gathering (event-social-gathering.png)
+- Volunteer Service (event-volunteer-service.png)
+- Literary Achievement (event-literary-achievement.png)
+- General Achievement (event-general-achievement.png)
 
 ## 🚀 How to Use Your Templates
 

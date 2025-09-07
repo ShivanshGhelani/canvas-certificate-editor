@@ -11,47 +11,47 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
   // Background templates organized by category
   const backgroundTemplates = {
     seminar: [
-      '/backgrounds/templates/converted-Gemini_Generated_Image_1f94nb1f94nb1f94.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_24edfy24edfy24ed.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_bephe7bephe7beph.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_br24fkbr24fkbr24.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_btrebtrebtrebtre.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_j2un03j2un03j2un.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_t6y38t6y38t6y38t.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_x7hbmlx7hbmlx7hb.png'
+      '/backgrounds/templates/seminar-professional-navy.png',
+      '/backgrounds/templates/seminar-corporate-gray.png',
+      '/backgrounds/templates/seminar-elegant-gold.png',
+      '/backgrounds/templates/seminar-formal-green.png',
+      '/backgrounds/templates/seminar-luxury-black.png',
+      '/backgrounds/templates/seminar-modern-white.png',
+      '/backgrounds/templates/seminar-premium-purple.png',
+      '/backgrounds/templates/seminar-classic-blue.png'
     ],
     sports: [
-      '/backgrounds/templates/converted-Gemini_Generated_Image_3v1wh23v1wh23v1w.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo (5).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo (6).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_9yqoqx9yqoqx9yqo (7).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_ukqyhkukqyhkukqy.png'
+      '/backgrounds/templates/sports-champion-gold.png',
+      '/backgrounds/templates/sports-achievement-red.png',
+      '/backgrounds/templates/sports-medal-silver.png',
+      '/backgrounds/templates/sports-victory-blue.png',
+      '/backgrounds/templates/sports-winner-green.png',
+      '/backgrounds/templates/sports-competition-orange.png'
     ],
     techEvent: [
-      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (1).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (2).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (3).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_7nirgx7nirgx7nir (4).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_e6ubske6ubske6ub (1).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_i2haipi2haipi2ha.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_tj0908tj0908tj09.png'
+      '/backgrounds/templates/tech-innovation-blue.png',
+      '/backgrounds/templates/tech-digital-excellence.png',
+      '/backgrounds/templates/tech-coding-competition.png',
+      '/backgrounds/templates/tech-conference-modern.png',
+      '/backgrounds/templates/tech-ai-ml-event.png',
+      '/backgrounds/templates/tech-cybersecurity-event.png',
+      '/backgrounds/templates/tech-hackathon-event.png'
     ],
     workshop: [
-      '/backgrounds/templates/converted-Gemini_Generated_Image_3cpza53cpza53cpz.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_3cpza53cpza53cpz (2).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_st1h5rst1h5rst1h.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_st1h5rst1h5rst1h (1).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_st1h5rst1h5rst1h (3).png'
+      '/backgrounds/templates/workshop-skills-development.png',
+      '/backgrounds/templates/workshop-creative-arts.png',
+      '/backgrounds/templates/workshop-professional-training.png',
+      '/backgrounds/templates/workshop-technical-skills.png',
+      '/backgrounds/templates/workshop-leadership-development.png'
     ],
     nonTechEvent: [
-      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk (1).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk (2).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_31lk1631lk1631lk (3).png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_cq0h6dcq0h6dcq0h.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_iroe7wiroe7wiroe.png',
-      '/backgrounds/templates/converted-Gemini_Generated_Image_ti32p2ti32p2ti32.png'
+      '/backgrounds/templates/event-cultural-celebration.png',
+      '/backgrounds/templates/event-arts-festival.png',
+      '/backgrounds/templates/event-community-service.png',
+      '/backgrounds/templates/event-social-gathering.png',
+      '/backgrounds/templates/event-volunteer-service.png',
+      '/backgrounds/templates/event-literary-achievement.png',
+      '/backgrounds/templates/event-general-achievement.png'
     ]
   };
 
