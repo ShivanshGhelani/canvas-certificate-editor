@@ -4,6 +4,7 @@ import TopBar from './TopBar';
 import Canvas from '../Canvas';
 import ElementProperties from './ElementProperties';
 import ImageProperties from './ImageProperties';
+import TemplateManager from './TemplateManager';
 
 const Layout = () => {
   const [selectedElement, setSelectedElement] = useState(null);
@@ -336,21 +337,39 @@ const Layout = () => {
       }
     };
 
+    const handleTemplateLoadRequest = (event) => {
+      const { templateId, dimension } = event.detail;
+      console.log('Template load requested:', templateId, 'for dimension:', dimension);
+      
+      // Trigger the template load through TemplateManager
+      const templateLoadEvent = new CustomEvent('loadTemplateById', {
+        detail: {
+          templateId: templateId,
+          dimension: dimension
+        }
+      });
+      window.dispatchEvent(templateLoadEvent);
+    };
+
     // Listen on window for the events dispatched by element-selection.js
     window.addEventListener('elementSelected', handleElementSelection);
     window.addEventListener('elementDeselected', handleElementDeselection);
     window.addEventListener('loadTemplate', handleTemplateLoadEvent);
+    window.addEventListener('templateLoadRequested', handleTemplateLoadRequest);
 
     return () => {
       window.removeEventListener('elementSelected', handleElementSelection);
       window.removeEventListener('elementDeselected', handleElementDeselection);
       window.removeEventListener('loadTemplate', handleTemplateLoadEvent);
+      window.removeEventListener('templateLoadRequested', handleTemplateLoadRequest);
     };
   }, []);
 
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       <Sidebar onTemplateLoad={handleTemplateLoad} />
+      {/* Hidden TemplateManager for event handling */}
+      <TemplateManager onTemplateLoad={handleTemplateLoad} hideUI={true} />
 
       <div className="flex-1 flex flex-col min-w-0">
         <TopBar onAddText={handleAddText} onTemplateReset={handleTemplateReset} />

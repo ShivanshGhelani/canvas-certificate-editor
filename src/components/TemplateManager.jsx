@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaCertificate, FaAward, FaGraduationCap, FaTrophy } from 'react-icons/fa';
 
-const TemplateManager = ({ onTemplateLoad }) => {
+const TemplateManager = ({ onTemplateLoad, hideUI = false }) => {
   console.log('TemplateManager rendered with onTemplateLoad:', !!onTemplateLoad);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [currentDimension, setCurrentDimension] = useState('portrait');
@@ -1490,14 +1490,40 @@ const TemplateManager = ({ onTemplateLoad }) => {
       }
     };
 
+    const handleLoadTemplateById = (event) => {
+      const { templateId, dimension } = event.detail;
+      console.log('Loading template by ID:', templateId, 'for dimension:', dimension);
+      
+      // Update current dimension first
+      if (dimension && dimension !== currentDimension) {
+        setCurrentDimension(dimension);
+      }
+      
+      // Find and load the template
+      const template = templates.find(t => t.id === templateId);
+      if (template) {
+        console.log('Template found:', template.name);
+        loadTemplate(template);
+      } else {
+        console.error('Template not found:', templateId);
+      }
+    };
+
     window.addEventListener('dimensionChanged', handleDimensionChange);
+    window.addEventListener('loadTemplateById', handleLoadTemplateById);
     
     return () => {
       window.removeEventListener('dimensionChanged', handleDimensionChange);
+      window.removeEventListener('loadTemplateById', handleLoadTemplateById);
     };
-  }, [selectedTemplate, templates]);
+  }, [selectedTemplate, templates, currentDimension]);
 
   console.log('Rendering', templates.length, 'templates');
+
+  // If hideUI is true, return null (no visual component, just event listeners)
+  if (hideUI) {
+    return null;
+  }
 
   return (
     <div className="p-4">
