@@ -9,11 +9,20 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "upload-backgrounds": "node scripts/upload-backgrounds.js",
-    "test-optimization": "node scripts/test-optimization.js"
+    "test-optimization": "node scripts/test-optimization.js",
+    "server": "node server.js",
+    "dev:full": "concurrently \"npm run server\" \"npm run dev\"",
+    "deploy": "vercel --prod",
+    "deploy:dev": "vercel"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.21.0",
     "@supabase/supabase-js": "^2.57.2",
     "@tailwindcss/vite": "^4.1.12",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.2",
     "react": "^19.1.1",
