@@ -117,7 +117,7 @@ const TextElement = ({
           border: 2px solid white;
           border-radius: 2px;
           cursor: ${handleInfo.cursor};
-          z-index: 1002;
+          z-index: 1001;
           display: none;
           box-shadow: 0 1px 3px rgba(0,0,0,0.3);
           pointer-events: auto;
@@ -437,14 +437,16 @@ const TextElement = ({
     <div
       ref={elementRef}
       className={`absolute select-none transition-all duration-200 ${
-        isSelected ? 'ring-2 ring-blue-500 ring-opacity-50 selected' : ''
-      } z-10`}
+        isSelected ? 'selected' : ''
+      }`}
       style={{
         left: `${elementPosition.x}px`,
         top: `${elementPosition.y}px`,
         width: `${elementSize.width}px`,
         height: `${elementSize.height}px`,
-        cursor: isEditing ? 'text' : 'grab'
+        cursor: isEditing ? 'text' : 'grab',
+        zIndex: isSelected ? 1 : 10,
+        overflow: 'visible'
       }}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
@@ -464,7 +466,7 @@ const TextElement = ({
         />
       ) : (
         <div
-          style={textStyles}
+          style={{...textStyles, overflow: 'hidden'}}
           className="p-2 flex items-center justify-center word-wrap break-words"
         >
           {text}
@@ -474,7 +476,12 @@ const TextElement = ({
       {/* Delete button */}
       {isSelected && !isEditing && (
         <button
-          className="delete-btn absolute -top-8 -right-2 w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors flex items-center justify-center shadow-lg"
+          className="delete-btn absolute w-6 h-6 bg-red-500 text-white rounded-full text-xs hover:bg-red-600 transition-colors flex items-center justify-center shadow-lg border-2 border-white z-999"
+          style={{ 
+            zIndex: 1003,
+            top: '12px',
+            right: '12px'
+          }}
           onClick={(e) => {
             e.stopPropagation();
             handleDelete();

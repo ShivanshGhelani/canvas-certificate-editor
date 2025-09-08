@@ -7,9 +7,12 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "upload-backgrounds": "node scripts/upload-backgrounds.js",
+    "test-optimization": "node scripts/test-optimization.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.57.2",
     "@tailwindcss/vite": "^4.1.12",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.2",

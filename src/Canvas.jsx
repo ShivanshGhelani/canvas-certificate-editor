@@ -21,6 +21,31 @@ const Canvas = ({ onTextElementsChange, template }) => {
     };
   }, []);
 
+  // Function to hide placeholder text when content is added
+  const hidePlaceholderText = () => {
+    const placeholderText = document.getElementById('default-placeholder-text');
+    if (placeholderText) {
+      placeholderText.style.display = 'none';
+      placeholderText.style.opacity = '0';
+      placeholderText.style.visibility = 'hidden';
+    }
+  };
+
+  // Function to show placeholder text when canvas is empty
+  const showPlaceholderText = () => {
+    const placeholderText = document.getElementById('default-placeholder-text');
+    const container = document.getElementById('dynamic-elements-container');
+    const hasElements = container && container.children.length > 0;
+    const hasBackground = window.currentBackgroundImage || (window.drawBackground && typeof window.drawBackground === 'function');
+    
+    // Only show placeholder if no elements and no custom background
+    if (placeholderText && !hasElements && !hasBackground) {
+      placeholderText.style.display = 'block';
+      placeholderText.style.opacity = '1';
+      placeholderText.style.visibility = 'visible';
+    }
+  };
+
   // Simple DOM-based text element creation (matching logo approach)
   const addSimpleTextElement = () => {
     const canvasRect = document.getElementById('certificate-wrapper')?.getBoundingClientRect();
@@ -38,6 +63,9 @@ const Canvas = ({ onTextElementsChange, template }) => {
     
     const container = document.getElementById('dynamic-elements-container');
     container.appendChild(element);
+    
+    // Hide placeholder text when element is added
+    hidePlaceholderText();
     
     // Make it interactive (same as logo)
     makeTextElementInteractive(element);
@@ -114,6 +142,8 @@ const Canvas = ({ onTextElementsChange, template }) => {
     window.triggerBackgroundUpload = triggerBackgroundUpload;
     window.setBackgroundImage = setBackgroundImage;
     window.resetBackground = resetBackground;
+    window.hidePlaceholderText = hidePlaceholderText;
+    window.showPlaceholderText = showPlaceholderText;
     
     // Expose image processing functions
     if (typeof removeWhiteBackground !== 'undefined') {
@@ -217,6 +247,10 @@ const Canvas = ({ onTextElementsChange, template }) => {
     element.style.transform = 'none'; // Remove transform for proper positioning
     
     container.appendChild(element);
+    
+    // Hide placeholder text when element is added
+    hidePlaceholderText();
+    
     selectElement(element);
   };
 
@@ -238,6 +272,10 @@ const Canvas = ({ onTextElementsChange, template }) => {
         element.style.transform = 'none'; // Remove transform for proper positioning
         
         container.appendChild(element);
+        
+        // Hide placeholder text when element is added
+        hidePlaceholderText();
+        
         selectElement(element);
         
         // Clear the file input to prevent issues
@@ -276,6 +314,10 @@ const Canvas = ({ onTextElementsChange, template }) => {
         element.style.transform = 'none'; // Remove transform for proper positioning
         
         container.appendChild(element);
+        
+        // Hide placeholder text when element is added
+        hidePlaceholderText();
+        
         selectElement(element);
         
         // Clear the file input to prevent issues
@@ -321,6 +363,10 @@ const Canvas = ({ onTextElementsChange, template }) => {
           element.style.transform = 'none';
           
           container.appendChild(element);
+          
+          // Hide placeholder text when element is added
+          hidePlaceholderText();
+          
           selectElement(element);
         };
         reader.readAsDataURL(file);
@@ -363,6 +409,9 @@ const Canvas = ({ onTextElementsChange, template }) => {
       
       // Store the background for future use
       window.currentBackgroundImage = imageSrc;
+      
+      // Hide placeholder text when background is set
+      hidePlaceholderText();
     };
     img.src = imageSrc;
   };
@@ -381,6 +430,9 @@ const Canvas = ({ onTextElementsChange, template }) => {
     
     // Clear stored background
     delete window.currentBackgroundImage;
+    
+    // Check if we should show placeholder text again
+    showPlaceholderText();
   };
 
   const triggerBackgroundUpload = () => {
@@ -492,9 +544,13 @@ const Canvas = ({ onTextElementsChange, template }) => {
       }
     });
     
-    // Remove delete buttons
+    // Remove delete buttons and toggle buttons
     document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+    document.querySelectorAll('.toggle-line-btn').forEach(btn => btn.remove());
     window.selectedElement = null;
+    
+    // Check if we should show placeholder text when nothing is selected
+    showPlaceholderText();
   };
 
   // Element creation functions
@@ -692,37 +748,72 @@ const Canvas = ({ onTextElementsChange, template }) => {
 
   // Create signature element function (same as logo but with background removal)
   
-  const createSimpleSignatureElement = (imageSrc) => {
+  const createSimpleSignatureElement = (imageSrc, includeSignatureLine = true) => {
     window.elementCounter = (window.elementCounter || 0) + 1;
     
-    // Create a wrapper div to hold the image and resize handles
+    // Create a wrapper div to hold the image, signature line, and resize handles
     const wrapper = document.createElement('div');
-    wrapper.className = 'dynamic-element';
+    wrapper.className = 'dynamic-element signature-element';
     wrapper.dataset.type = 'signature';
+    wrapper.dataset.includeSignatureLine = includeSignatureLine.toString();
     
-    // Create the actual image element
+    // Create container for image and line
+    const container = document.createElement('div');
+    container.style.cssText = `
+      width: 100%;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+    `;
+    
+    // Create signature line element (positioned first, at the bottom)
+    const signatureLine = document.createElement('div');
+    signatureLine.className = 'signature-line';
+    signatureLine.style.cssText = `
+      width: 90%;
+      height: 2px;
+      background-color: #000000;
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: ${includeSignatureLine ? 'block' : 'none'};
+    `;
+    
+    // Create the actual image element (positioned above the line)
     const element = document.createElement('img');
     element.src = imageSrc;
     element.style.cssText = `
       width: 100%;
-      height: 100%;
+      height: 80%;
       object-fit: contain;
       pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
     `;
     
-    // Style the wrapper (better proportions for signatures)
+    // Add elements to container (line first, then image to create layering)
+    container.appendChild(signatureLine);
+    container.appendChild(element);
+    
+    // Style the wrapper (better proportions for signatures with line)
     wrapper.style.cssText = `
       position: absolute;
       width: 150px;
-      height: 80px;
+      height: ${includeSignatureLine ? '100px' : '80px'};
       cursor: move;
       border: 2px solid transparent;
       z-index: 10;
       user-select: none;
     `;
     
-    // Add the image to the wrapper
-    wrapper.appendChild(element);
+    // Add the container to the wrapper
+    wrapper.appendChild(container);
     
     // Add selection on click
     wrapper.addEventListener('click', (e) => {
@@ -817,6 +908,9 @@ const Canvas = ({ onTextElementsChange, template }) => {
     element.classList.add('selected');
     window.selectedElement = element;
     
+    // Hide placeholder text when any element is selected
+    hidePlaceholderText();
+    
     // Dispatch custom event for sidebar properties panel
     const event = new CustomEvent('elementSelected', { 
       detail: element
@@ -858,8 +952,9 @@ const Canvas = ({ onTextElementsChange, template }) => {
     const existingBtn = element.querySelector('.delete-btn');
     if (existingBtn) existingBtn.remove();
     
-    // Also remove any global delete buttons
+    // Also remove any global delete buttons and toggle buttons
     document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+    document.querySelectorAll('.toggle-line-btn').forEach(btn => btn.remove());
     
     // Create delete button
     const deleteBtn = document.createElement('button');
@@ -899,8 +994,12 @@ const Canvas = ({ onTextElementsChange, template }) => {
         deleteBtn.remove();
         window.selectedElement = null;
         
-        // Hide any remaining delete buttons
+        // Hide any remaining delete buttons and toggle buttons
         document.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+        document.querySelectorAll('.toggle-line-btn').forEach(btn => btn.remove());
+        
+        // Check if we should show placeholder text again after deletion
+        showPlaceholderText();
       }
     });
     
@@ -926,6 +1025,81 @@ const Canvas = ({ onTextElementsChange, template }) => {
     });
     
     element.appendChild(deleteBtn);
+    
+    // Add signature line toggle button if this is a signature element
+    if (element.dataset.type === 'signature') {
+      const toggleLineBtn = document.createElement('button');
+      toggleLineBtn.className = 'toggle-line-btn';
+      toggleLineBtn.innerHTML = '─';
+      toggleLineBtn.title = 'Toggle signature line';
+      toggleLineBtn.style.cssText = `
+        position: absolute;
+        top: -12px;
+        right: 30px;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #28a745;
+        color: white;
+        border: 2px solid white;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        z-index: 1003;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
+        pointer-events: auto;
+      `;
+      
+      // Update button appearance based on current state
+      const signatureLine = element.querySelector('.signature-line');
+      const isLineVisible = signatureLine && signatureLine.style.display !== 'none';
+      toggleLineBtn.style.background = isLineVisible ? '#28a745' : '#6c757d';
+      toggleLineBtn.innerHTML = isLineVisible ? '─' : '┄';
+      
+      // Add click handler for toggling signature line
+      toggleLineBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        const signatureLine = element.querySelector('.signature-line');
+        if (signatureLine) {
+          const isCurrentlyVisible = signatureLine.style.display !== 'none';
+          signatureLine.style.display = isCurrentlyVisible ? 'none' : 'block';
+          
+          // Update button appearance
+          toggleLineBtn.style.background = isCurrentlyVisible ? '#6c757d' : '#28a745';
+          toggleLineBtn.innerHTML = isCurrentlyVisible ? '┄' : '─';
+          
+          // Update element height based on line visibility
+          const newHeight = isCurrentlyVisible ? '80px' : '100px';
+          element.style.height = newHeight;
+          
+          // Update dataset
+          element.dataset.includeSignatureLine = (!isCurrentlyVisible).toString();
+        }
+      });
+      
+      // Add hover effects
+      toggleLineBtn.addEventListener('mouseenter', () => {
+        const isLineVisible = signatureLine && signatureLine.style.display !== 'none';
+        toggleLineBtn.style.background = isLineVisible ? '#218838' : '#5a6268';
+        toggleLineBtn.style.transform = 'scale(1.15)';
+        toggleLineBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+      });
+      
+      toggleLineBtn.addEventListener('mouseleave', () => {
+        const isLineVisible = signatureLine && signatureLine.style.display !== 'none';
+        toggleLineBtn.style.background = isLineVisible ? '#28a745' : '#6c757d';
+        toggleLineBtn.style.transform = 'scale(1)';
+        toggleLineBtn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+      });
+      
+      element.appendChild(toggleLineBtn);
+    }
   };
 
   const showTemplateDeleteButton = (element) => {
@@ -1311,8 +1485,8 @@ const Canvas = ({ onTextElementsChange, template }) => {
         /* --- ESSENTIAL STRUCTURE --- */
         .certificate-wrapper {
             position: relative;
-            width: 744px;   /* A4 portrait scaled for display (2480 * 0.3) */
-            height: 1052px; /* A4 portrait scaled for display (3508 * 0.3) */
+            width: 1052px;  /* A4 landscape scaled for display (3508 * 0.3) */
+            height: 744px;  /* A4 landscape scaled for display (2480 * 0.3) */
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             background-color: var(--modern-bg);
             overflow: hidden;
@@ -1320,12 +1494,13 @@ const Canvas = ({ onTextElementsChange, template }) => {
             transition: all 0.3s ease;
         }
 
-        /* Template-specific landscape orientation */
-        .certificate-wrapper.template-active {
-            /* Determine orientation based on canvas dimensions via JavaScript */
+        /* Template-specific portrait orientation */
+        .certificate-wrapper.template-active.portrait-mode {
+            width: 744px;   /* Portrait width for templates (2480 * 0.3) */
+            height: 1052px; /* Portrait height for templates (3508 * 0.3) */
         }
 
-        /* Landscape orientation styles - applied when needed */
+        /* Landscape orientation styles - default */
         .certificate-wrapper.landscape-mode {
             width: 1052px;  /* Landscape width for templates (3508 * 0.3) */
             height: 744px;  /* Landscape height for templates (2480 * 0.3) */
@@ -1671,8 +1846,8 @@ const Canvas = ({ onTextElementsChange, template }) => {
 
       {/* Parent container with converted body styles using Tailwind */}
       <div className="bg-transparent flex flex-col items-center justify-center min-h-auto m-0 p-0 font-sans" style={{fontFamily: "'Roboto', sans-serif"}}>
-        <div className="certificate-wrapper" id="certificate-wrapper">
-        <canvas id="background-canvas" width="2480" height="3508"></canvas>
+        <div className="certificate-wrapper landscape-mode" id="certificate-wrapper">
+        <canvas id="background-canvas" width="3508" height="2480"></canvas>
         
         <div className="certificate-container" id="certificate-foreground">
           <div id="dynamic-elements-container">
@@ -1704,7 +1879,7 @@ const Canvas = ({ onTextElementsChange, template }) => {
               </div>
             </div>
             
-            <footer className="footer-content">
+            <footer className="footer-content" style={{ display: 'none' }}>
               <div className="signature-block">
                 <label htmlFor="upload-sig-1" className="signature-line" id="sig-line-1"></label>
                 <p className="name" contentEditable="true" suppressContentEditableWarning={true}></p>

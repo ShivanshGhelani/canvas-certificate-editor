@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaArrowsAltV, FaArrowsAltH } from 'react-icons/fa';
 
-const DimensionSelector = ({ onDimensionChange, initialDimension = 'portrait' }) => {
+const DimensionSelector = ({ onDimensionChange, initialDimension = 'landscape' }) => {
   const [selectedDimension, setSelectedDimension] = useState(initialDimension);
 
   const dimensions = [
@@ -75,6 +75,24 @@ const DimensionSelector = ({ onDimensionChange, initialDimension = 'portrait' })
     if (initialDim) {
       handleDimensionSelect(initialDim);
     }
+
+    // Listen for external dimension updates (from TopBar template selection)
+    const handleExternalUpdate = (event) => {
+      const { selectedDimension: newDimension } = event.detail;
+      if (newDimension && newDimension !== selectedDimension) {
+        setSelectedDimension(newDimension);
+        const dimension = dimensions.find(d => d.id === newDimension);
+        if (dimension) {
+          console.log('📐 DimensionSelector updated externally to:', newDimension);
+        }
+      }
+    };
+
+    window.addEventListener('updateDimensionSelector', handleExternalUpdate);
+    
+    return () => {
+      window.removeEventListener('updateDimensionSelector', handleExternalUpdate);
+    };
   }, []);
 
   return (
@@ -121,9 +139,7 @@ const DimensionSelector = ({ onDimensionChange, initialDimension = 'portrait' })
                     <span className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
                       {dimension.canvas.width}×{dimension.canvas.height}px
                     </span>
-                    <span className="inline-block bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded">
-                      {dimension.physical.width} × {dimension.physical.height}
-                    </span>
+                    
                   </div>
                 </div>
                 {selectedDimension === dimension.id && (
@@ -138,22 +154,6 @@ const DimensionSelector = ({ onDimensionChange, initialDimension = 'portrait' })
           );
         })}
       </div>
-      
-      {selectedDimension && (
-        <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-            </div>
-            <p className="text-sm text-green-800 font-medium">
-              {dimensions.find(d => d.id === selectedDimension)?.name} dimension selected
-            </p>
-          </div>
-          <p className="text-xs text-green-600 mt-1">
-            Canvas ready for {selectedDimension} certificates at print quality (300 DPI)
-          </p>
-        </div>
-      )}
     </div>
   );
 };
