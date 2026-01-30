@@ -22,6 +22,85 @@ function rgbToHex(rgb) {
   return `#${toHex(m[1])}${toHex(m[2])}${toHex(m[3])}`;
 }
 
+// Font collection organized by category (50+ fonts)
+const FONTS = {
+  'Sans Serif': [
+    'Arial',
+    'Helvetica',
+    'Verdana',
+    'Roboto',
+    'Open Sans',
+    'Lato',
+    'Montserrat',
+    'Poppins',
+    'Raleway',
+    'Ubuntu',
+    'Nunito',
+    'Source Sans Pro',
+    'PT Sans',
+    'Work Sans',
+    'Mulish',
+    'Quicksand',
+    'Barlow',
+    'Oxygen',
+    'Karla',
+    'Inter',
+  ],
+  'Serif': [
+    'Times New Roman',
+    'Georgia',
+    'Playfair Display',
+    'Merriweather',
+    'Lora',
+    'Libre Baskerville',
+    'Cormorant Garamond',
+    'EB Garamond',
+    'Crimson Text',
+    'Bitter',
+    'Cardo',
+    'Vollkorn',
+    'Domine',
+    'Spectral',
+    'Arvo',
+  ],
+  'Display': [
+    'Bebas Neue',
+    'Righteous',
+    'Abril Fatface',
+    'Archivo Black',
+    'Comfortaa',
+    'Fredoka',
+    'Passion One',
+    'Fjalla One',
+    'Anton',
+    'Alfa Slab One',
+  ],
+  'Handwriting': [
+    'Dancing Script',
+    'Great Vibes',
+    'Allura',
+    'Parisienne',
+    'Sacramento',
+    'Tangerine',
+    'Satisfy',
+    'Kaushan Script',
+    'Cookie',
+    'Caveat',
+    'Patrick Hand',
+    'Indie Flower',
+    'Shadows Into Light',
+    'Amatic SC',
+  ],
+  'Elegant': [
+    'Cinzel',
+    'Playfair Display',
+    'Bodoni Moda',
+    'Unna',
+    'Italiana',
+    'Philosopher',
+  ]
+};
+
 const ElementProperties = ({ selectedElement }) => {
   const [styleState, setStyleState] = useState({
     fontSize: 16,
@@ -219,20 +298,26 @@ const ElementProperties = ({ selectedElement }) => {
     <div className="w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="max-w-full px-4 py-3">
         <div className="flex items-center justify-center gap-3 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {/* Font family */}
+          {/* Font family with preview */}
           <select
-            className="h-8 rounded border border-gray-300 px-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="h-8 rounded border border-gray-300 px-2 text-sm font-medium outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-w-[160px]"
+            style={{ fontFamily: styleState.fontFamily }}
             value={styleState.fontFamily}
             onChange={(e) => apply('fontFamily', e.target.value)}
           >
-            <option>Canva Sans</option>
-            <option>Arial</option>
-            <option>Helvetica</option>
-            <option>Times New Roman</option>
-            <option>Georgia</option>
-            <option>Verdana</option>
-            <option>Roboto</option>
-            <option>Open Sans</option>
+            {Object.entries(FONTS).map(([category, fonts]) => (
+              <optgroup key={category} label={category}>
+                {fonts.map(font => (
+                  <option 
+                    key={font} 
+                    value={font}
+                    style={{ fontFamily: font }}
+                  >
+                    {font}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </select>
 
               {/* Size stepper */}
