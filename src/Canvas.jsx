@@ -464,17 +464,22 @@ const Canvas = ({ onTextElementsChange, template }) => {
       if (propertiesPanel) propertiesPanel.style.display = 'none';
     }
     
-    // Wait for UI updates to render
-    await new Promise(r => setTimeout(r, 100));
+    // Wait for fonts to load and UI updates to render
+    await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 300));
 
     const certificateWrapper = document.getElementById('certificate-wrapper');
     const canvas = document.getElementById('background-canvas');
     
     try {
       const canvasElement = await html2canvas(certificateWrapper, { 
-        scale: 2,
+        scale: 3,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        letterRendering: true,
+        foreignObjectRendering: false
       });
       
       // Determine orientation based on canvas dimensions
@@ -1905,8 +1910,9 @@ const Canvas = ({ onTextElementsChange, template }) => {
         <button id="add-text-btn" onClick={handleAddText}>Add some Text</button>
         <button id="add-logo-btn">Add Logo</button>
         <button id="download-pdf" onClick={handleDownloadPDF}>Download PDF</button>
-        <button id="ai-generate-btn">Generate AI</button>
-        <input type="text" id="ai-prompt-input" />
+        {/* PHASE 2: AI Background Generation */}
+        {/* <button id="ai-generate-btn">Generate AI</button> */}
+        {/* <input type="text" id="ai-prompt-input" /> */}
         
         {/* Hidden file inputs */}
         <input type="file" id="upload-sig-1" accept="image/*" />

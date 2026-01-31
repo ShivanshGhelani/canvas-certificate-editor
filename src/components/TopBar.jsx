@@ -416,14 +416,22 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
     };
   }, [showBackgroundModal]);
 
-  const downloadPNG = () => {
+  const downloadPNG = async () => {
     const certificateWrapper = document.getElementById('certificate-wrapper');
     if (!certificateWrapper || !window.html2canvas) return;
     
+    // Wait for fonts to load
+    await document.fonts.ready;
+    await new Promise(r => setTimeout(r, 300));
+    
     window.html2canvas(certificateWrapper, { 
-      scale: 2,
+      scale: 3,
       useCORS: true,
-      backgroundColor: 'white'
+      allowTaint: false,
+      backgroundColor: 'white',
+      logging: false,
+      letterRendering: true,
+      foreignObjectRendering: false
     }).then(canvas => {
       const link = document.createElement('a');
       link.download = 'certificate.png';
@@ -613,137 +621,57 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
       .map(([property, value]) => `${property}: ${value}`)
       .join('; ');
     
-    // Clone the certificate content and optimize images
-    const clonedContent = certificateWrapper.cloneNode(true);
+    // Build text elements HTML manually for clean export
+    const textElements = certificateWrapper.querySelectorAll('[data-type="text"]');
+    const textElementsHTML = Array.from(textElements).map(el => {
+      const computedStyle = window.getComputedStyle(el);
+      const textContent = el.childNodes[0]?.textContent || el.textContent;
+      
+      return `<div style="position: absolute; left: ${computedStyle.left}; top: ${computedStyle.top}; width: ${computedStyle.width}; height: ${computedStyle.height}; font-family: ${computedStyle.fontFamily}; font-size: ${computedStyle.fontSize}; font-weight: ${computedStyle.fontWeight}; font-style: ${computedStyle.fontStyle}; color: ${computedStyle.color}; text-align: ${computedStyle.textAlign}; line-height: ${computedStyle.lineHeight}; letter-spacing: ${computedStyle.letterSpacing}; text-decoration: ${computedStyle.textDecoration}; text-transform: ${computedStyle.textTransform}; z-index: ${computedStyle.zIndex};">${textContent}</div>`;
+    }).join('\n');
     
-    // Compress any images in the cloned content
-    const images = clonedContent.querySelectorAll('img');
-    for (const img of images) {
-      if (img.src && img.src.startsWith('data:')) {
-        try {
-          // Compress inline images
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          const tempImg = new Image();
-          
-          await new Promise((resolve) => {
-            tempImg.onload = () => {
-              const maxSize = 600; // Reduced size for signatures/logos
-              let { width, height } = tempImg;
-              
-              if (width > maxSize || height > maxSize) {
-                const ratio = Math.min(maxSize / width, maxSize / height);
-                width *= ratio;
-                height *= ratio;
-              }
-              
-              canvas.width = width;
-              canvas.height = height;
-              ctx.drawImage(tempImg, 0, 0, width, height);
-              img.src = canvas.toDataURL('image/jpeg', 0.7);
-              resolve();
-            };
-            tempImg.src = img.src;
-          });
-        } catch (error) {
-          console.warn('Failed to compress image:', error);
-        }
-      }
-    }
+    console.log('🎨 Built', textElements.length, 'text elements manually');
     
-    // Create a complete HTML document with optimized styling
+    // Create a complete HTML document with manually built elements
     const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificate</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Alfa+Slab+One&family=Allura&family=Amatic+SC:wght@400;700&family=Anton&family=Archivo+Black&family=Arvo:ital,wght@0,400;0,700;1,400&family=Barlow:wght@400;500;700&family=Bebas+Neue&family=Bitter:ital,wght@0,400;0,700;1,400&family=Bodoni+Moda:ital,wght@0,400;0,700;1,400&family=Cardo:ital,wght@0,400;0,700;1,400&family=Caveat:wght@400;700&family=Cinzel:wght@400;700&family=Comfortaa:wght@400;700&family=Cookie&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@400;700&family=Domine:wght@400;700&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Fjalla+One&family=Fredoka:wght@400;700&family=Great+Vibes&family=Indie+Flower&family=Inter:wght@400;500;700&family=Italiana&family=Karla:ital,wght@0,400;0,700;1,400&family=Kaushan+Script&family=Lato:ital,wght@0,400;0,700;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;700&family=Mulish:ital,wght@0,400;0,700;1,400&family=Nunito:ital,wght@0,400;0,700;1,400&family=Open+Sans:wght@400;600&family=Oxygen:wght@400;700&family=PT+Sans:ital,wght@0,400;0,700;1,400&family=Parisienne&family=Passion+One:wght@400;700&family=Patrick+Hand&family=Philosopher:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,700&family=Poppins:wght@400;600&family=Quicksand:wght@400;500;700&family=Raleway:wght@400;700&family=Righteous&family=Roboto:wght@300;400;700&family=Sacramento&family=Satisfy&family=Shadows+Into+Light&family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400&family=Spectral:ital,wght@0,400;0,700;1,400&family=Tangerine:wght@400;700&family=Ubuntu:ital,wght@0,400;0,700;1,400&family=Unna:ital,wght@0,400;0,700;1,400&family=Vollkorn:ital,wght@0,400;0,700;1,400&family=Work+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-            background: transparent;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-        }
-        
-        .certificate-display {
-            background: transparent;
-            padding: 0;
-            position: relative;
-            width: fit-content;
-            height: fit-content;
+            background: #f0f0f0;
         }
         
         .certificate-wrapper {
             ${filteredStyles};
             position: relative;
-            ${backgroundDataURL ? `background-image: url('${backgroundDataURL}');` : ''}
+            background-image: url('${backgroundDataURL}');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
         }
-        
-        .dynamic-element {
-            position: absolute;
-            font-family: inherit;
-            z-index: 10;
-        }
-        
-        .template-element {
-            position: absolute;
-            font-family: inherit;
-            z-index: 10;
-        }
-        
-        .signature-element {
-            position: absolute;
-            z-index: 10;
-        }
-        
-        .signature-line {
-            background-color: #000000;
-        }
-        
-        /* Remove interactive elements from export */
-        .resize-handle,
-        .remove-btn,
-        .delete-btn,
-        .toggle-line-btn {
-            display: none !important;
-        }
-        
-        /* Preserve text styling */
-        span, div {
-            color: inherit;
-            font-size: inherit;
-            font-family: inherit;
-            font-weight: inherit;
-            text-align: inherit;
-        }
-        
-        /* Image optimization */
-        img {
-            max-width: 100%;
-            height: auto;
-        }
     </style>
 </head>
 <body>
-    <div class="certificate-display">
-        ${clonedContent.outerHTML}
+    <div class="certificate-wrapper">
+        ${textElementsHTML}
     </div>
 </body>
 </html>`;
+
+    console.log('✅ HTML built successfully');
 
     // Create and download the HTML file
     const blob = new Blob([htmlContent], { type: 'text/html' });
@@ -912,14 +840,15 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
     });
   };
 
-  const generateAIBackground = () => {
-    const prompt = document.getElementById('ai-prompt')?.value;
-    const promptInput = document.getElementById('ai-prompt-input');
-    if (prompt && promptInput) {
-      promptInput.value = prompt;
-      document.getElementById('ai-generate-btn')?.click();
-    }
-  };
+  // PHASE 2 FEATURE: AI Background Generation
+  // const generateAIBackground = () => {
+  //   const prompt = document.getElementById('ai-prompt')?.value;
+  //   const promptInput = document.getElementById('ai-prompt-input');
+  //   if (prompt && promptInput) {
+  //     promptInput.value = prompt;
+  //     document.getElementById('ai-generate-btn')?.click();
+  //   }
+  // };
 
   const triggerBackgroundUpload = () => {
     // Create file input for background upload
@@ -1127,9 +1056,9 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
           <span>Signature</span>
         </button>
 
-        <div className="w-px h-6 bg-gray-300 mx-2"></div>
+        {/* PHASE 2 FEATURE: AI Background Generation */}
+        {/* <div className="w-px h-6 bg-gray-300 mx-2"></div>
 
-        {/* AI Background Section */}
         <div className="flex items-center gap-2">
           <FaMagic className="text-gray-600" />
           <input 
@@ -1143,7 +1072,7 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
           >
             Generate
           </button>
-        </div>
+        </div> */}
       </div>
 
       <div className="flex items-center gap-3">
@@ -1169,7 +1098,8 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
 
         {showExportMenu && (
           <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-xl min-w-48 z-50 animate-fade-in-down">
-            <button
+            {/* PNG and PDF options hidden for now */}
+            {/* <button
               className="w-full px-4 py-3 text-sm text-gray-700 flex items-center gap-3 hover:bg-gray-100"
               onClick={downloadPNG}
             >
@@ -1182,7 +1112,7 @@ const TopBar = ({ onAddText, onTemplateReset }) => {
             >
               <FaFilePdf className="text-red-500" />
               <span>Download PDF</span>
-            </button>
+            </button> */}
             <button
               className="w-full px-4 py-3 text-sm text-gray-700 flex items-center gap-3 hover:bg-gray-100"
               onClick={downloadHTML}
